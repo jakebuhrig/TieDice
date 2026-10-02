@@ -1,0 +1,15 @@
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 1rem;
+  font-family: system-ui, sans-serif;
+}
+
+.status .hint {
+  color: #666;
+  font-size: 0.9rem;
+}

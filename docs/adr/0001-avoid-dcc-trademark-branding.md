@@ -1,0 +1,5 @@
+# Avoid Dungeon Crawl Classics trademark branding; no Goodman Games license for now
+
+Goodman Games offers a free Third-Party Publishing License that would let this project use the "Dungeon Crawl Classics"/"DCC" name and reference official tables, following the precedent of the existing Foundry VTT DCC system. We decided not to pursue it for now: the project is branded "ZocchiDice" (a generic reference to the dice shapes, not Goodman Games' mark), implements only mechanics (dice rolling, chain shifting) with no reproduced copyrighted tables or class text, and defers anything requiring official reference tables (crit/fumble tables, spell tables) indefinitely. If the project is later published publicly and official content becomes desirable, applying for the license is the reversal path — it's a free email request, not a structural rework.
+
+Consequence: public-facing copy must avoid "Dungeon Crawl Classics"/"DCC" naming and Goodman Games' logos/branding, and should carry a non-affiliation disclaimer once published.
