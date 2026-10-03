@@ -81,7 +81,7 @@ Notes carried over from Phase 1 discussion, for whenever Phase 2/3 design starts
 
 - **Platform**: Owlbear Rodeo extension via `@owlbear-rodeo/sdk`. (Note: OBR's SDK has no hook to extend the native dice roller in place — it's a separate first-party extension — so this is built as a fully independent extension, which was the plan anyway.)
 - **Relevant SDK primitives**: room metadata (~16kB cap) holds the bounded Roll History, and `OBR.room.onMetadataChange` pushes live updates to every client, so `OBR.broadcast` is not used. `OBR.player.getRole()` gates the secret-roll toggle. There is no built-in chat/log API to hook into.
-- **Stack**: TypeScript + React + Vite. Fonts (Host Grotesk, Inter) are bundled, not loaded from a CDN. The background uses WebGL2 rather than WebGPU so it works in any Chrome iframe without extra permissions.
+- **Stack**: TypeScript + React + Vite. Fonts (Host Grotesk) are bundled, not loaded from a CDN. The background uses WebGL2 rather than WebGPU so it works in any Chrome iframe without extra permissions.
 - **Hosting**: local development against OBR's local-extension testing flow to start; Vercel when ready to share with the group.
 
 ## Branding & Licensing

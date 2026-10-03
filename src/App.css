@@ -1,6 +1,5 @@
 :root {
   --font-ui: 'Host Grotesk', system-ui, sans-serif;
-  --font-data: 'Inter', system-ui, sans-serif;
 
   --card-fill: rgba(21, 21, 21, 0.6);
 }
@@ -373,7 +372,6 @@ input:focus-visible {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-family: var(--font-data);
 }
 
 .roll-history li {
