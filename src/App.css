@@ -1,60 +1,130 @@
 :root {
-  /* Tie-dye: soft color blobs over a swirl. */
-  --active-gradient:
-    radial-gradient(circle at 12% 25%, #ff5fa2 0%, transparent 42%),
-    radial-gradient(circle at 38% 90%, #ffa63a 0%, transparent 45%),
-    radial-gradient(circle at 62% 20%, #fff04d 0%, transparent 40%),
-    radial-gradient(circle at 88% 75%, #4de88a 0%, transparent 45%),
-    radial-gradient(circle at 70% 60%, #3ad0ff 0%, transparent 35%),
-    radial-gradient(circle at 4% 95%, #b07bff 0%, transparent 40%),
-    conic-gradient(from 30deg at 40% 55%, #ff8fb8, #ffc15a, #fff27a, #7cf0a0, #6fdcff, #c3a0ff, #ff8fb8);
-}
+  --font-ui: 'Host Grotesk', system-ui, sans-serif;
+  --font-data: 'Inter', system-ui, sans-serif;
 
-:root {
-  /* Same tie-dye, with irregular blobs sized as a percentage of the button so they scale with its width. */
-  --active-gradient-wide:
-    radial-gradient(ellipse 22% 160% at 4% 40%, #ff5fa2 0%, color-mix(in srgb, #ff5fa2 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 12% 130% at 15% 100%, #ffa63a 0%, color-mix(in srgb, #ffa63a 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 26% 150% at 30% 10%, #fff04d 0%, color-mix(in srgb, #fff04d 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 10% 120% at 42% 95%, #4de88a 0%, color-mix(in srgb, #4de88a 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 6% 90% at 48% 70%, #ff7ad9 0%, color-mix(in srgb, #ff7ad9 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 18% 140% at 55% 35%, #3ad0ff 0%, color-mix(in srgb, #3ad0ff 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 24% 160% at 66% 90%, #b07bff 0%, color-mix(in srgb, #b07bff 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 11% 130% at 78% 15%, #ff5fa2 0%, color-mix(in srgb, #ff5fa2 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 20% 150% at 88% 70%, #ffe14d 0%, color-mix(in srgb, #ffe14d 55%, transparent) 40%, transparent 100%),
-    radial-gradient(ellipse 14% 130% at 97% 30%, #4de88a 0%, color-mix(in srgb, #4de88a 55%, transparent) 40%, transparent 100%),
-    conic-gradient(from 30deg at 40% 55%, #ff8fb8, #ffc15a, #fff27a, #7cf0a0, #6fdcff, #c3a0ff, #ff8fb8);
+  --card-fill: rgba(21, 21, 21, 0.6);
 }
 
 .app {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 0.75rem;
+  padding: 16px 12px 12px;
   box-sizing: border-box;
-  font-family: system-ui, sans-serif;
-  gap: 0.5rem;
+  font-family: var(--font-ui);
+  gap: 8px;
   overflow-y: auto;
+  /* Text always sits on the animated gradient or a dark card, so it stays light regardless of theme. */
+  color: #fff;
+  isolation: isolate;
 }
 
-.app h1 {
-  font-family: 'Pirata One', system-ui, serif;
-  font-size: 2.2rem;
-  font-weight: 400;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
+/* Slim, translucent scrollbars that sit quietly on the gradient instead of the browser default. */
+@supports selector(::-webkit-scrollbar) {
+  .app::-webkit-scrollbar,
+  .history-section::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .app::-webkit-scrollbar-track,
+  .history-section::-webkit-scrollbar-track {
+    background: transparent;
+    /* Keeps the pill clear of the panel's rounded corners at both ends. */
+    margin: 6px 0;
+  }
+
+  .app::-webkit-scrollbar-thumb,
+  .history-section::-webkit-scrollbar-thumb {
+    /* The transparent border + padding-box clip insets the visible pill by 2px on every side. */
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.4);
+    background-clip: padding-box;
+  }
+
+  .app::-webkit-scrollbar-thumb:hover,
+  .history-section::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.65);
+    background-clip: padding-box;
+  }
+
+  .app::-webkit-scrollbar-button,
+  .history-section::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .app,
+  .history-section {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+  }
+}
+
+.gradient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #121212;
+}
+
+.gradient-bg canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.app h1.logo {
   margin: 0;
+  line-height: 0;
 }
 
-.app h2 {
-  font-size: 0.95rem;
-  margin: 0 0 0.25rem;
+.motion-toggle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(21, 21, 21, 0.4);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 100ms ease;
 }
 
-/* Colors derive from currentColor so they stay legible in both light and dark themes. */
+.motion-toggle:hover,
+.motion-toggle:active {
+  background: rgba(21, 21, 21, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-toggle {
+    transition: none;
+  }
+}
+
+.logo img {
+  display: block;
+}
+
 .hint {
   opacity: 0.7;
   font-size: 0.85rem;
+}
+
+button {
+  font-family: inherit;
 }
 
 button:focus-visible,
@@ -69,7 +139,7 @@ input:focus-visible {
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
-  border: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+  border: 1px dashed rgba(255, 255, 255, 0.45);
   border-radius: 6px;
   font-size: 0.8rem;
 }
@@ -77,55 +147,78 @@ input:focus-visible {
 .dice-tray {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .die-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px 6px;
 }
 
 .die-buttons button {
   height: 40px;
   min-width: 40px;
-  padding: 0 0.4rem;
+  padding: 0 6.4px;
   border: none;
-  border-radius: 8px;
-  background: color-mix(in srgb, currentColor 16%, transparent);
-  color: inherit;
+  border-radius: 12px;
+  background: rgba(21, 21, 21, 0.4);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 100ms ease;
 }
 
+/* Hover/press: the glass deepens from 40% to 60% (the design's hover state). */
 .die-buttons button:hover,
 .die-buttons button:active {
-  background: var(--active-gradient);
-  color: #151515;
+  background: rgba(21, 21, 21, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .die-buttons button {
+    transition: none;
+  }
 }
 
 .staged-dice {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  min-height: 2rem;
+  align-items: center;
+  gap: 5.6px;
+  min-height: 32px;
 }
 
 .staged-die {
-  color: inherit;
-  background: color-mix(in srgb, currentColor 14%, transparent);
-  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 8px 0 12px;
+  border: 1px solid #ffa63a;
+  border-radius: 48px;
+  background: rgba(21, 21, 21, 0.6);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 13.333px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.staged-die img {
+  display: block;
 }
 
 .clear-button {
-  align-self: center;
-  min-height: 2rem;
-  padding: 0.25rem 0.4rem;
+  min-height: 32px;
+  padding: 4px 6.4px;
   border: none;
   background: transparent;
-  color: inherit;
+  color: #000;
+  font-size: 13.333px;
+  font-weight: 600;
   opacity: 0.7;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -140,11 +233,12 @@ input:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  background: color-mix(in srgb, currentColor 10%, transparent);
-  font-size: 0.85rem;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--card-fill);
+  backdrop-filter: blur(10px);
+  font-size: 13.6px;
   cursor: pointer;
 }
 
@@ -152,11 +246,11 @@ input:focus-visible {
   appearance: none;
   position: relative;
   flex-shrink: 0;
-  width: 2.5rem;
-  height: 1.4rem;
+  width: 48px;
+  height: 24px;
   margin: 0;
   border-radius: 999px;
-  background: color-mix(in srgb, currentColor 30%, transparent);
+  background: rgba(10, 10, 15, 0.55);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -166,20 +260,20 @@ input:focus-visible {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: calc(1.4rem - 4px);
-  height: calc(1.4rem - 4px);
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.35);
   transition: transform 0.15s;
 }
 
 .switch:checked {
-  background: var(--active-gradient);
+  background: #4de88a;
 }
 
 .switch:checked::after {
-  transform: translateX(1.1rem);
+  transform: translateX(24px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -189,75 +283,132 @@ input:focus-visible {
   }
 }
 
-.tray-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.roll-button {
-  flex: 1;
-  min-height: 40px;
-  font-weight: bold;
-}
-
-.roll-button:not(:disabled) {
-  background: var(--active-gradient-wide);
-  color: #151515;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.roll-button:not(:disabled):hover {
-  filter: brightness(1.06);
-}
-
 .last-roll {
+  position: relative;
+  padding: 24px 16px;
+  border-radius: 12px;
+  background: var(--card-fill);
+  backdrop-filter: blur(10px);
   text-align: center;
-  padding: 0.75rem;
-  border-radius: 8px;
-  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+/* Staging dice blurs the previous result back so the Roll button can take its place. */
+.last-roll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: filter 150ms ease;
+}
+
+.last-roll-content.is-blurred {
+  filter: blur(7px);
 }
 
 .last-roll-total {
-  font-size: 3.5rem;
-  font-weight: bold;
-  line-height: 1;
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 56px;
 }
 
 .last-roll-breakdown {
-  margin-top: 0.25rem;
-  font-size: 0.85rem;
+  padding-top: 4px;
+  font-size: 13.6px;
+  font-weight: 500;
   opacity: 0.8;
 }
 
+.last-roll .roll-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(347px, calc(100% - 32px));
+  height: 40px;
+  transform: translate(-50%, -50%);
+  border: 1px solid #b07bff;
+  border-radius: 48px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+/* Hover/press: stays white with its border and grows slightly. */
+.last-roll .roll-button:hover,
+.last-roll .roll-button:active {
+  transform: translate(-50%, -50%) scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .last-roll-content,
+  .last-roll .roll-button {
+    transition: none;
+  }
+}
+
 .history-section {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
   overflow-y: auto;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--card-fill);
+  backdrop-filter: blur(10px);
+}
+
+.history-section h2 {
+  margin: 0;
+  font-size: 15.2px;
+  font-weight: 500;
 }
 
 .roll-history {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-data);
 }
 
 .roll-history li {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: baseline;
-  font-size: 0.85rem;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
-  padding-bottom: 0.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
 }
 
 .roll-history li.hidden-roll {
   opacity: 0.7;
+}
+
+.roll-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.roll-player {
+  font-weight: 700;
+}
+
+.roll-breakdown {
+  opacity: 0.8;
+}
+
+.roll-total {
+  flex-shrink: 0;
+  font-size: 13.6px;
+  font-weight: 700;
 }
 
 .sr-only {
@@ -267,17 +418,4 @@ input:focus-visible {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-.roll-player {
-  font-weight: bold;
-}
-
-.roll-breakdown {
-  opacity: 0.8;
-}
-
-.roll-total {
-  font-weight: bold;
-  margin-left: auto;
 }

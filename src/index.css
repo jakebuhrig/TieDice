@@ -10,3 +10,19 @@ body {
   min-height: 100vh;
   box-sizing: border-box;
 }
+
+body.is-mock #root {
+  width: 444px;
+  height: 666px;
+  min-height: 0;
+  /* Makes position: fixed children (the gradient) fill this frame, not the whole page. */
+  transform: translateZ(0);
+  margin: 16px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  outline: 1px dashed color-mix(in srgb, currentColor 40%, transparent);
+}
+
+body.is-mock .app {
+  height: 100%;
+}

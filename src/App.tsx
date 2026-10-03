@@ -4,8 +4,12 @@ import './App.css'
 import { DiceTray } from './components/DiceTray'
 import { DevBar } from './components/DevBar'
 import { LastRoll } from './components/LastRoll'
+import { Logo } from './components/Logo'
+import { MotionToggle } from './components/MotionToggle'
+import { MovingGradient } from './components/MovingGradient'
 import { RollHistoryList } from './components/RollHistoryList'
 import { rollTray, type DieSize, type RollRecord, type Tray } from './dice'
+import { useGradientPaused } from './useGradientPaused'
 import { useOwlbearPlayer } from './useOwlbearPlayer'
 import { useRollHistory } from './useRollHistory'
 
@@ -14,6 +18,7 @@ const MAX_LOCAL_HIDDEN = 20
 function App() {
   const { ready, role, playerId, playerName, playerColor } = useOwlbearPlayer()
   const { history, appendPublicRoll } = useRollHistory()
+  const [gradientPaused, toggleGradientPaused] = useGradientPaused()
 
   const [tray, setTray] = useState<Tray>([])
   const [hidden, setHidden] = useState(false)
@@ -74,7 +79,7 @@ function App() {
   if (!obr.isAvailable) {
     return (
       <main className="app">
-        <h1>Wacky Dice</h1>
+        <Logo />
         <p>Not running inside Owlbear Rodeo.</p>
         <p className="hint">
           Add this extension via <code>http://localhost:5173/manifest.json</code> in
@@ -87,7 +92,7 @@ function App() {
   if (!ready) {
     return (
       <main className="app">
-        <h1>Wacky Dice</h1>
+        <Logo />
         <p>Connecting&hellip;</p>
       </main>
     )
@@ -95,20 +100,22 @@ function App() {
 
   return (
     <main className="app">
+      <MovingGradient paused={gradientPaused} />
       {isMock && <DevBar />}
-      <h1>Wacky Dice</h1>
+      <header className="app-header">
+        <Logo />
+        <MotionToggle paused={gradientPaused} onToggle={toggleGradientPaused} />
+      </header>
       <DiceTray
         tray={tray}
         onAdd={addDie}
         onRemove={removeDie}
         onClear={() => setTray([])}
-        onRoll={roll}
-        canRoll={stagedCount > 0}
         showHiddenToggle={role === 'GM'}
         hidden={hidden}
         onHiddenChange={setHidden}
       />
-      <LastRoll roll={myLastRoll} />
+      <LastRoll roll={myLastRoll} canRoll={stagedCount > 0} onRoll={roll} />
       <section className="history-section">
         <h2>Roll History</h2>
         <RollHistoryList rolls={visibleHistory} />

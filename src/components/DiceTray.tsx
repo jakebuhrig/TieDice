@@ -1,3 +1,4 @@
+import removeIcon from '../assets/remove.svg'
 import { SUPPORTED_DICE, type DieSize, type Tray } from '../dice'
 
 interface DiceTrayProps {
@@ -5,8 +6,6 @@ interface DiceTrayProps {
   onAdd: (size: DieSize) => void
   onRemove: (size: DieSize) => void
   onClear: () => void
-  onRoll: () => void
-  canRoll: boolean
   showHiddenToggle: boolean
   hidden: boolean
   onHiddenChange: (hidden: boolean) => void
@@ -17,14 +16,10 @@ export function DiceTray({
   onAdd,
   onRemove,
   onClear,
-  onRoll,
-  canRoll,
   showHiddenToggle,
   hidden,
   onHiddenChange,
 }: DiceTrayProps) {
-  const staged = tray
-
   return (
     <div className="dice-tray">
       <div className="die-buttons">
@@ -41,7 +36,7 @@ export function DiceTray({
       </div>
 
       <div className="staged-dice" role="group" aria-label="Dice staged to roll">
-        {staged.map(({ size, count }) => (
+        {tray.map(({ size, count }) => (
           <button
             key={size}
             type="button"
@@ -50,10 +45,11 @@ export function DiceTray({
             aria-label={`${count}d${size} staged. Remove one d${size}`}
             title="Click to remove one"
           >
-            {count}d{size} <span aria-hidden="true">&times;</span>
+            {count}d{size}
+            <img src={removeIcon} alt="" width={16} height={16} />
           </button>
         ))}
-        {staged.length > 0 && (
+        {tray.length > 0 && (
           <button
             type="button"
             className="clear-button"
@@ -67,7 +63,7 @@ export function DiceTray({
 
       {showHiddenToggle && (
         <label className="hidden-card">
-          <span>Hidden roll (GM only)</span>
+          <span>Roll in secret</span>
           <input
             type="checkbox"
             role="switch"
@@ -77,12 +73,6 @@ export function DiceTray({
           />
         </label>
       )}
-
-      <div className="tray-actions">
-        <button type="button" className="roll-button" onClick={onRoll} disabled={!canRoll}>
-          Roll
-        </button>
-      </div>
     </div>
   )
 }
