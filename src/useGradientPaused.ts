@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 
-const STORAGE_KEY = 'wackydice/gradientPaused'
+const STORAGE_KEY = 'tiedice/gradientPaused'
 
 // An explicit choice wins; otherwise people who prefer reduced motion start paused.
 function readInitial(): boolean {

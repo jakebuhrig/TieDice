@@ -86,4 +86,4 @@ Notes carried over from Phase 1 discussion, for whenever Phase 2/3 design starts
 
 ## Branding & Licensing
 
-Project name: **Tie Dice** (earlier working names ZocchiDice and Wacky Dice are retired; the GitHub repo is still named `zocchidice`). Does not use "Dungeon Crawl Classics" or "DCC" branding, and reproduces no official Goodman Games tables or text — mechanics only. Goodman Games' free Third-Party Publishing License remains an option to revisit if this goes to public release and official branding/content becomes desirable. Full reasoning in [ADR 0001](./adr/0001-avoid-dcc-trademark-branding.md).
+Project name: **Tie Dice** (earlier working names ZocchiDice and Wacky Dice are retired; the GitHub repo is `jakebuhrig/TieDice`). Does not use "Dungeon Crawl Classics" or "DCC" branding, and reproduces no official Goodman Games tables or text — mechanics only. Goodman Games' free Third-Party Publishing License remains an option to revisit if this goes to public release and official branding/content becomes desirable. Full reasoning in [ADR 0001](./adr/0001-avoid-dcc-trademark-branding.md).
