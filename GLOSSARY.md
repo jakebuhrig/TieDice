@@ -1,4 +1,4 @@
-# ZocchiDice
+# Tie Dice
 
 An Owlbear Rodeo extension implementing Dungeon Crawl Classics (DCC) tooling: starting with a dice roller for DCC's full dice chain, later extended with a character sheet linked to tokens.
 

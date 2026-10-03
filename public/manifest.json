@@ -1,12 +1,12 @@
 {
-  "name": "Wacky Dice",
+  "name": "Tie Dice",
   "version": "0.0.1",
   "manifest_version": 1,
   "author": "jbuhrig",
-  "description": "An unofficial dice roller for DCC-style games, covering the full non-standard dice set.",
+  "description": "A dice roller for games that use the full set of odd-shaped dice: d3, d5, d7, d14, d16, d24, d30 and more.",
   "icon": "/icon.svg",
   "action": {
-    "title": "Wacky Dice",
+    "title": "Tie Dice",
     "icon": "/icon.svg",
     "popover": "/",
     "height": 600,

@@ -1,4 +1,4 @@
-# ZocchiDice — Product Requirements
+# Tie Dice — Product Requirements
 
 An Owlbear Rodeo extension for running Dungeon Crawl Classics (DCC) games, starting with a dice roller for DCC's non-standard dice. See [GLOSSARY.md](../GLOSSARY.md) for precise terminology used below, and [ADR 0001](./adr/0001-avoid-dcc-trademark-branding.md) for the branding/licensing decision.
 
@@ -31,22 +31,24 @@ d3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24, d30, d100.
 - Quantity per die type (e.g. `3d6`).
 - No modifier/formula input (no "+3" field) — mirrors Owlbear Rodeo's own native roller. Modifier support belongs to Phase 2 (an Item's preset die + modifier), not the raw roller.
 - On roll: show the per-die breakdown and the total sum.
+- Staged dice appear as pills (orange border, circled × to remove one die) with a text-style Clear button after them.
+- There is no standing Roll bar. While dice are staged, the previous result in the last-roll card blurs back and a white "Roll the dice" pill with a purple border appears over it; hover and press grow it slightly. After a roll the pill goes away and the card shows the new result.
 
 ### Hidden Roll
 
-- Available only to the GM role (role-gated, not a toggle every player can use).
+- Available only to the GM role (role-gated, not a toggle every player can use). The toggle is labeled "Roll in secret" and stays on until switched off, so its on state is the only indicator that the next roll is secret.
 - Result is never broadcast to the room and never appears in the shared Roll History.
 - Still gets logged — just only into the GM-only view (see below).
 
 ### Roll History
 
 - One underlying chronological log (bounded, e.g. last ~20 rolls) — not two separate lists.
-- Filtered by viewer role: Players see public rolls only. The GM sees every entry, with Hidden Rolls flagged inline (e.g. a lock icon) so they're distinguishable without being a separate panel.
+- Filtered by viewer role: Players see public rolls only. The GM sees every entry, with Hidden Rolls shown dimmed (70% opacity, plus a screen-reader label) so they're distinguishable without being a separate panel. The last-roll card adds no extra cue for a secret roll.
 - A live "last roll" display in addition to the scrollable history.
 
 ### Presentation
 
-- **Now**: numeric result display. No illustrated/2D die graphics, no 3D — ship the mechanics first.
+- **Now**: numeric result display on dark glass surfaces over an animated moving-gradient background (a WebGL2 port of the Figma "Moving gradient" shader). The background has a pause/play button in the header; the choice is remembered per browser, and people who prefer reduced motion start paused. No 2D die illustrations and no 3D yet.
 - **Later**: procedural 3D dice, skipping an illustrated middle step. Candidate approach: [three-polydice](https://github.com/manthrax/three-polydice) (MIT, Three.js + Ammo.js) already procedurally generates d14/d16/d20/d24/d30/d100 via closed-form geometry (no hand-made model assets); d3/d5/d7 aren't covered yet but are simple enough shapes to extend the same way.
 
 ## Non-goals for Phase 1
@@ -78,10 +80,10 @@ Notes carried over from Phase 1 discussion, for whenever Phase 2/3 design starts
 ## Technical Approach
 
 - **Platform**: Owlbear Rodeo extension via `@owlbear-rodeo/sdk`. (Note: OBR's SDK has no hook to extend the native dice roller in place — it's a separate first-party extension — so this is built as a fully independent extension, which was the plan anyway.)
-- **Relevant SDK primitives**: `OBR.broadcast` (ephemeral pub/sub, used for live roll notifications) and room metadata (~16kB cap, used to persist the bounded Roll History) since there's no built-in chat/log API to hook into.
-- **Stack**: TypeScript + React.
+- **Relevant SDK primitives**: room metadata (~16kB cap) holds the bounded Roll History, and `OBR.room.onMetadataChange` pushes live updates to every client, so `OBR.broadcast` is not used. `OBR.player.getRole()` gates the secret-roll toggle. There is no built-in chat/log API to hook into.
+- **Stack**: TypeScript + React + Vite. Fonts (Host Grotesk, Inter) are bundled, not loaded from a CDN. The background uses WebGL2 rather than WebGPU so it works in any Chrome iframe without extra permissions.
 - **Hosting**: local development against OBR's local-extension testing flow to start; Vercel when ready to share with the group.
 
 ## Branding & Licensing
 
-Project name: **ZocchiDice**. Does not use "Dungeon Crawl Classics" or "DCC" branding, and reproduces no official Goodman Games tables or text — mechanics only. Goodman Games' free Third-Party Publishing License remains an option to revisit if this goes to public release and official branding/content becomes desirable. Full reasoning in [ADR 0001](./adr/0001-avoid-dcc-trademark-branding.md).
+Project name: **Tie Dice** (earlier working names ZocchiDice and Wacky Dice are retired; the GitHub repo is still named `zocchidice`). Does not use "Dungeon Crawl Classics" or "DCC" branding, and reproduces no official Goodman Games tables or text — mechanics only. Goodman Games' free Third-Party Publishing License remains an option to revisit if this goes to public release and official branding/content becomes desirable. Full reasoning in [ADR 0001](./adr/0001-avoid-dcc-trademark-branding.md).
