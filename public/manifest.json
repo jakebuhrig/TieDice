@@ -1,12 +1,12 @@
 {
-  "name": "ZocchiDice",
+  "name": "Wacky Dice",
   "version": "0.0.1",
   "manifest_version": 1,
   "author": "jbuhrig",
   "description": "An unofficial dice roller for DCC-style games, covering the full non-standard dice set.",
   "icon": "/icon.svg",
   "action": {
-    "title": "ZocchiDice",
+    "title": "Wacky Dice",
     "icon": "/icon.svg",
     "popover": "/",
     "height": 600,

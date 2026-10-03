@@ -1,15 +1,283 @@
-.status {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  text-align: center;
-  padding: 1rem;
-  font-family: system-ui, sans-serif;
+:root {
+  /* Tie-dye: soft color blobs over a swirl. */
+  --active-gradient:
+    radial-gradient(circle at 12% 25%, #ff5fa2 0%, transparent 42%),
+    radial-gradient(circle at 38% 90%, #ffa63a 0%, transparent 45%),
+    radial-gradient(circle at 62% 20%, #fff04d 0%, transparent 40%),
+    radial-gradient(circle at 88% 75%, #4de88a 0%, transparent 45%),
+    radial-gradient(circle at 70% 60%, #3ad0ff 0%, transparent 35%),
+    radial-gradient(circle at 4% 95%, #b07bff 0%, transparent 40%),
+    conic-gradient(from 30deg at 40% 55%, #ff8fb8, #ffc15a, #fff27a, #7cf0a0, #6fdcff, #c3a0ff, #ff8fb8);
 }
 
-.status .hint {
-  color: #666;
-  font-size: 0.9rem;
+:root {
+  /* Same tie-dye, with irregular blobs sized as a percentage of the button so they scale with its width. */
+  --active-gradient-wide:
+    radial-gradient(ellipse 22% 160% at 4% 40%, #ff5fa2 0%, color-mix(in srgb, #ff5fa2 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 12% 130% at 15% 100%, #ffa63a 0%, color-mix(in srgb, #ffa63a 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 26% 150% at 30% 10%, #fff04d 0%, color-mix(in srgb, #fff04d 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 10% 120% at 42% 95%, #4de88a 0%, color-mix(in srgb, #4de88a 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 6% 90% at 48% 70%, #ff7ad9 0%, color-mix(in srgb, #ff7ad9 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 18% 140% at 55% 35%, #3ad0ff 0%, color-mix(in srgb, #3ad0ff 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 24% 160% at 66% 90%, #b07bff 0%, color-mix(in srgb, #b07bff 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 11% 130% at 78% 15%, #ff5fa2 0%, color-mix(in srgb, #ff5fa2 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 20% 150% at 88% 70%, #ffe14d 0%, color-mix(in srgb, #ffe14d 55%, transparent) 40%, transparent 100%),
+    radial-gradient(ellipse 14% 130% at 97% 30%, #4de88a 0%, color-mix(in srgb, #4de88a 55%, transparent) 40%, transparent 100%),
+    conic-gradient(from 30deg at 40% 55%, #ff8fb8, #ffc15a, #fff27a, #7cf0a0, #6fdcff, #c3a0ff, #ff8fb8);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.app h1 {
+  font-family: 'Pirata One', system-ui, serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.app h2 {
+  font-size: 0.95rem;
+  margin: 0 0 0.25rem;
+}
+
+/* Colors derive from currentColor so they stay legible in both light and dark themes. */
+.hint {
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #4c9aff;
+  outline-offset: 2px;
+}
+
+.dev-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.dice-tray {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.die-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.die-buttons button {
+  height: 40px;
+  min-width: 40px;
+  padding: 0 0.4rem;
+  border: none;
+  border-radius: 8px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  color: inherit;
+  cursor: pointer;
+}
+
+.die-buttons button:hover,
+.die-buttons button:active {
+  background: var(--active-gradient);
+  color: #151515;
+}
+
+.staged-dice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-height: 2rem;
+}
+
+.staged-die {
+  color: inherit;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  min-height: 2rem;
+}
+
+.clear-button {
+  align-self: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.4rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.clear-button:hover {
+  opacity: 1;
+}
+
+.hidden-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.switch {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 1.4rem;
+  margin: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 30%, transparent);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.4rem - 4px);
+  height: calc(1.4rem - 4px);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s;
+}
+
+.switch:checked {
+  background: var(--active-gradient);
+}
+
+.switch:checked::after {
+  transform: translateX(1.1rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch::after {
+    transition: none;
+  }
+}
+
+.tray-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.roll-button {
+  flex: 1;
+  min-height: 40px;
+  font-weight: bold;
+}
+
+.roll-button:not(:disabled) {
+  background: var(--active-gradient-wide);
+  color: #151515;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.roll-button:not(:disabled):hover {
+  filter: brightness(1.06);
+}
+
+.last-roll {
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.last-roll-total {
+  font-size: 3.5rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.last-roll-breakdown {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.history-section {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.roll-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.roll-history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  padding-bottom: 0.25rem;
+}
+
+.roll-history li.hidden-roll {
+  opacity: 0.7;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.roll-player {
+  font-weight: bold;
+}
+
+.roll-breakdown {
+  opacity: 0.8;
+}
+
+.roll-total {
+  font-weight: bold;
+  margin-left: auto;
 }
