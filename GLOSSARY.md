@@ -16,7 +16,7 @@ _Avoid_: Zocchi dice (that's the physical dice brand DCC's chain popularized, no
 A roll available only to the GM role. Its result is logged to the GM-only Roll History, never broadcast to the room, and never appears in the shared Roll History — not even masked. Used for secret Judge rolls (e.g. corruption, mercurial magic).
 
 **Modifier**:
-A flat number added to (or, when negative, subtracted from) a roll's total, set with the −/+ control before rolling and reset to 0 after each roll. Stored on the roll record and shown in its breakdown, e.g. `1d6 (6) - 3`. Not a formula — it is one signed integer.
+A flat number added to (or, when negative, subtracted from) a roll's total, set with the −/+ control before rolling and reset to 0 after each roll. Stored on the roll record and shown in its breakdown, e.g. `1d6 (6) - 3`. Ranges from -20 to +99. Not a formula — it is one signed integer. The total is not floored, so `1d6 (3) - 7` is -4.
 
 **Roll History**:
 A single, bounded log of recent rolls (e.g. the last ~20), chronologically ordered. Not two separate lists — one underlying log, filtered by viewer role: Players see it with Hidden Rolls stripped out; the GM sees every entry, with Hidden Rolls flagged so they're distinguishable inline.

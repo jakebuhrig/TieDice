@@ -16,7 +16,10 @@ export interface DieResult {
   value: number
 }
 
-// The most a modifier can be raised or lowered to, in either direction.
+// How low and how high a modifier can go. DCC bonuses and penalties are small (ability modifiers
+// run -3 to +3), so the penalty side stops at -20, while the bonus side leaves room for big
+// stacked bonuses such as burned Luck.
+export const MIN_MODIFIER = -20
 export const MAX_MODIFIER = 99
 
 export interface RollRecord {
@@ -55,6 +58,7 @@ export function rollTray(tray: Tray): DieResult[] {
 }
 
 export function rollTotal(dice: DieResult[], modifier = 0): number {
+  // Not floored: 1d6 (3) with a -7 modifier really is -4.
   return dice.reduce((sum, die) => sum + die.value, 0) + modifier
 }
 

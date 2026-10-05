@@ -1,5 +1,5 @@
 import removeIcon from '../assets/remove.svg'
-import { MAX_MODIFIER, SUPPORTED_DICE, type DieSize, type Tray } from '../dice'
+import { MAX_MODIFIER, MIN_MODIFIER, SUPPORTED_DICE, type DieSize, type Tray } from '../dice'
 import { ModifierInput } from './ModifierInput'
 
 interface DiceTrayProps {
@@ -136,7 +136,7 @@ export function DiceTray({
               type="button"
               className="modifier-button"
               onClick={() => onModifierChange(modifier - 1)}
-              disabled={modifier <= -MAX_MODIFIER}
+              disabled={modifier <= MIN_MODIFIER}
               aria-label="Decrease modifier"
             >
               <MinusIcon />

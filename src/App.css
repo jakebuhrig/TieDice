@@ -133,6 +133,9 @@
 .segmented {
   /* Width of one segment: the 16px icon plus side padding. The pill and its slide use it too. */
   --segment-width: 40px;
+  /* The second segment overlaps the first by this much, so the whole control is narrower than two
+     full segments. The pill slides by the width minus the overlap. */
+  --segment-overlap: 4px;
   position: relative;
   display: flex;
   /* No padding: the active pill fills its half of the container edge to edge. The glass rim is
@@ -164,7 +167,7 @@
 }
 
 .segmented:has(.segment:nth-child(2) input:checked)::before {
-  transform: translateX(var(--segment-width));
+  transform: translateX(calc(var(--segment-width) - var(--segment-overlap)));
 }
 
 .segment {
@@ -177,6 +180,10 @@
   color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
   transition: color 180ms ease;
+}
+
+.segment + .segment {
+  margin-left: calc(-1 * var(--segment-overlap));
 }
 
 .segment:hover {

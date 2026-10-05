@@ -1,12 +1,12 @@
 import { useState, type ChangeEvent, type KeyboardEvent } from 'react'
-import { formatModifier, MAX_MODIFIER } from '../dice'
+import { formatModifier, MAX_MODIFIER, MIN_MODIFIER } from '../dice'
 
 interface ModifierInputProps {
   value: number
   onChange: (value: number) => void
 }
 
-const clamp = (n: number) => Math.max(-MAX_MODIFIER, Math.min(MAX_MODIFIER, n))
+const clamp = (n: number) => Math.max(MIN_MODIFIER, Math.min(MAX_MODIFIER, n))
 
 // What the person has typed, e.g. "-", "+4", "12"; empty or a lone sign means no number yet.
 const parseDraft = (draft: string): number | null => {
@@ -21,7 +21,7 @@ export function ModifierInput({ value, onChange }: ModifierInputProps) {
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const next = e.target.value
-    // A sign (optional) followed by at most two digits, which is also the ±99 limit.
+    // A sign (optional) followed by at most two digits; clamp() then applies the real limits.
     if (!/^[+-]?\d{0,2}$/.test(next)) return
     setDraft(next)
     // Apply as they type, so a roll started without leaving the field still uses it. An empty
