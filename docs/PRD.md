@@ -29,15 +29,15 @@ d3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24, d30, d100.
 
 - Tray-style: stage one or more dice before rolling, **mixed types allowed** in a single roll (e.g. `1d20 + 1d8` for a Warrior's attack + Deed Die).
 - Quantity per die type (e.g. `3d6`).
-- No modifier/formula input (no "+3" field) — mirrors Owlbear Rodeo's own native roller. Modifier support belongs to Phase 2 (an Item's preset die + modifier), not the raw roller.
-- On roll: show the per-die breakdown and the total sum.
+- A flat **modifier** control sits beside "Secret roll" (for players, who have no secret toggle, it takes the full row): a minus button, the value in the middle, a plus button. It starts at 0, steps by 1 within ±99, and always shows its sign (`+3`, `-3`). It is added to the total and shown in the breakdown (`1d6 (6) - 3` → total 3), and it resets to 0 after every roll. A modifier with no dice staged does nothing. There is no formula parsing; richer modifiers (an Item's preset `d8+2`) still belong to Phase 2.
+- On roll: show the per-die breakdown (with the modifier) and the total sum.
 - Staged dice appear as pills (orange border, circled × to remove one die) with a text-style Clear button after them.
 - There is no standing Roll bar. While dice are staged, the previous result in the last-roll card blurs back and a white "Roll the dice" pill with a purple border appears over it; hover and press grow it slightly. After a roll the pill goes away and the card shows the new result.
 - Reveal animation: the pill fades out, the big number flickers through totals the dice could actually produce and decelerates onto the real one (about 0.75s in total), then the breakdown fades in. The roll is decided immediately but published to the room only when the number lands, so nobody sees the result before the roller does; closing the popover mid-reveal publishes it right away. People who prefer reduced motion skip the animation. The big card only ever shows the roller's own result; other players' rolls appear only in the history.
 
 ### Hidden Roll
 
-- Available only to the GM role (role-gated, not a toggle every player can use). The toggle is labeled "Roll in secret" and stays on until switched off, so its on state is the only indicator that the next roll is secret.
+- Available only to the GM role (role-gated, not a toggle every player can use). The toggle is labeled "Secret roll" and stays on until switched off, so its on state is the only indicator that the next roll is secret.
 - Result is never broadcast to the room and never appears in the shared Roll History.
 - Still gets logged — just only into the GM-only view (see below).
 
@@ -55,7 +55,7 @@ d3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24, d30, d100.
 ## Non-goals for Phase 1
 
 - No character sheet, no token linking, no initiative tracking (see Roadmap).
-- No modifiers/formulas on rolls.
+- No formula input on rolls (a flat modifier is supported; there is no dice-expression parsing).
 - No chain-shift / advantage-disadvantage die substitution.
 - No reproduced official DCC tables (crit/fumble/spell tables) — see ADR 0001.
 

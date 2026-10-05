@@ -21,7 +21,7 @@ export function RollHistoryList({ rolls }: RollHistoryListProps) {
               {roll.playerName}
             </span>
             {roll.hidden && <span className="sr-only">Hidden roll</span>}
-            <span className="roll-breakdown">{formatRoll(roll.dice)}</span>
+            <span className="roll-breakdown">{formatRoll(roll.dice, roll.modifier)}</span>
           </span>
           <span className="roll-total">
             <span className="sr-only">Total </span>

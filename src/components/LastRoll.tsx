@@ -40,7 +40,7 @@ export function LastRoll({ roll, rolling, canRoll, onRoll, onLanded }: LastRollP
   useEffect(() => {
     if (!rolling) return
 
-    const { min, max } = totalRange(rolling.dice)
+    const { min, max } = totalRange(rolling.dice, rolling.modifier)
     const timers: number[] = []
     let shown: number | null = null
 
@@ -98,7 +98,7 @@ export function LastRoll({ roll, rolling, canRoll, onRoll, onLanded }: LastRollP
                 roll && (
                   <>
                     {roll.hidden && <span className="sr-only">Hidden roll. </span>}
-                    {formatRoll(roll.dice)}
+                    {formatRoll(roll.dice, roll.modifier)}
                   </>
                 )
               )}

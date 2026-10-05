@@ -16,12 +16,18 @@ export interface DieResult {
   value: number
 }
 
+// The most a modifier can be raised or lowered to, in either direction.
+export const MAX_MODIFIER = 99
+
 export interface RollRecord {
   id: string
   playerId: string
   playerName: string
   playerColor: string
   dice: DieResult[]
+  // Flat amount added to (or, when negative, taken from) the dice total. Absent on rolls saved
+  // before modifiers existed, which count as 0.
+  modifier?: number
   total: number
   hidden: boolean
   rolledAt: number
@@ -48,19 +54,34 @@ export function rollTray(tray: Tray): DieResult[] {
   )
 }
 
-export function formatRoll(dice: DieResult[]): string {
+export function rollTotal(dice: DieResult[], modifier = 0): number {
+  return dice.reduce((sum, die) => sum + die.value, 0) + modifier
+}
+
+// "+3", "-3", or "0": how the modifier control shows its value.
+export function formatModifier(modifier: number): string {
+  return modifier > 0 ? `+${modifier}` : String(modifier)
+}
+
+// "1d6 (6) - 3": the dice grouped by size, then the modifier when there is one.
+export function formatRoll(dice: DieResult[], modifier = 0): string {
   const bySize = new Map<DieSize, number[]>()
   for (const die of dice) {
     const values = bySize.get(die.size) ?? []
     values.push(die.value)
     bySize.set(die.size, values)
   }
-  return Array.from(bySize.entries())
+  const diceText = Array.from(bySize.entries())
     .map(([size, values]) => `${values.length}d${size} (${values.join(', ')})`)
     .join(' + ')
+  if (modifier === 0) return diceText
+  return `${diceText} ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}`
 }
 
 // Lowest and highest totals this roll could have produced; the reveal animation flickers within it.
-export function totalRange(dice: DieResult[]): { min: number; max: number } {
-  return { min: dice.length, max: dice.reduce((sum, die) => sum + die.size, 0) }
+export function totalRange(dice: DieResult[], modifier = 0): { min: number; max: number } {
+  return {
+    min: dice.length + modifier,
+    max: dice.reduce((sum, die) => sum + die.size, 0) + modifier,
+  }
 }

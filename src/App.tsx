@@ -8,7 +8,7 @@ import { Logo } from './components/Logo'
 import { MovingGradient } from './components/MovingGradient'
 import { RollHistoryList } from './components/RollHistoryList'
 import { ViewControls } from './components/ViewControls'
-import { rollTray, type DieSize, type RollRecord, type Tray } from './dice'
+import { rollTotal, rollTray, type DieSize, type RollRecord, type Tray } from './dice'
 import { useGradientPaused } from './useGradientPaused'
 import { useOwlbearPlayer } from './useOwlbearPlayer'
 import { useRollHistory } from './useRollHistory'
@@ -26,6 +26,8 @@ function App() {
   }
 
   const [tray, setTray] = useState<Tray>([])
+  // A flat amount added to the next roll's total; it goes back to 0 after every roll.
+  const [modifier, setModifier] = useState(0)
   const [hidden, setHidden] = useState(false)
   // Hidden rolls are never written to room metadata or broadcast — they only ever
   // exist in the GM's own local state (see GLOSSARY.md: Hidden Roll).
@@ -107,12 +109,14 @@ function App() {
       playerName,
       playerColor,
       dice,
-      total: dice.reduce((sum, d) => sum + d.value, 0),
+      modifier,
+      total: rollTotal(dice, modifier),
       hidden: hidden && role === 'GM',
       rolledAt: Date.now(),
     }
 
     setTray([])
+    setModifier(0)
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       // No reveal animation for people who prefer reduced motion: show and publish immediately.
       publish(record)
@@ -163,6 +167,8 @@ function App() {
         onAdd={addDie}
         onRemove={removeDie}
         onClear={() => setTray([])}
+        modifier={modifier}
+        onModifierChange={setModifier}
         showHiddenToggle={role === 'GM'}
         hidden={hidden}
         onHiddenChange={setHidden}
