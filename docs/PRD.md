@@ -49,7 +49,7 @@ d3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24, d30, d100.
 
 ### Presentation
 
-- **Now**: numeric result display on dark glass surfaces over an animated moving-gradient background (a WebGL2 port of the Figma "Moving gradient" shader). The header has one glass container with a Trippy/Calm segmented switch (Lucide sparkles and moon icons) and a pause/play button. Trippy (the default) is the bright palette; Calm is the same swirl in subtle dark greys with lighter glass surfaces and a white logo. Both choices are remembered per browser, and people who prefer reduced motion start paused. No 2D die illustrations and no 3D yet.
+- **Now**: numeric result display on dark glass surfaces over an animated moving-gradient background (a WebGL2 port of the Figma "Moving gradient" shader). The header has two round glass buttons: a Trippy/Calm button (Lucide sparkles and moon icons) and a pause/play button. The view button shows the current view (sparkles for Trippy, the moon for Calm); the pause button shows the action (play while paused). Icons crossfade with a small turn. Trippy (the default) is the bright palette; Calm is the same swirl in subtle dark greys with lighter glass surfaces and a white logo. Both choices are remembered per browser, and people who prefer reduced motion start paused. No 2D die illustrations and no 3D yet.
 - **Later**: procedural 3D dice, skipping an illustrated middle step. Candidate approach: [three-polydice](https://github.com/manthrax/three-polydice) (MIT, Three.js + Ammo.js) already procedurally generates d14/d16/d20/d24/d30/d100 via closed-form geometry (no hand-made model assets); d3/d5/d7 aren't covered yet but are simple enough shapes to extend the same way.
 
 ## Non-goals for Phase 1

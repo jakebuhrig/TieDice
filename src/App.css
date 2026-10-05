@@ -113,7 +113,7 @@
   line-height: 0;
 }
 
-/* The Trippy/Calm switch and the pause/play button are separate glass controls. */
+/* The Trippy/Calm button and the pause/play button are separate round glass controls. */
 .view-controls {
   display: flex;
   align-items: center;
@@ -127,76 +127,6 @@
   background: var(--surface-fill);
   backdrop-filter: blur(8px);
   box-shadow: var(--glass-ring);
-}
-
-/* Trippy / Calm segmented switch: two radio inputs with a highlighted selected segment. */
-.segmented {
-  /* Width of one segment: the 16px icon plus side padding. The pill and its slide use it too. */
-  --segment-width: 40px;
-  /* The second segment overlaps the first by this much, so the whole control is narrower than two
-     full segments. The pill slides by the width minus the overlap. */
-  --segment-overlap: 4px;
-  position: relative;
-  display: flex;
-  /* No padding: the active pill fills its half of the container edge to edge. The glass rim is
-     drawn by ::after (below) so it stays visible on top of the pill. */
-  box-shadow: none;
-}
-
-.segmented::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  box-shadow: var(--glass-ring);
-  pointer-events: none;
-}
-
-/* The active pill is the same fill as the "Secret roll" switch's off state. It is one element
-   that slides between the segments (whole-pixel moves keep it crisp). */
-.segmented::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: var(--segment-width);
-  height: 32px;
-  border-radius: 999px;
-  background: var(--switch-off);
-  transition: transform 180ms cubic-bezier(0.3, 0.8, 0.3, 1);
-}
-
-.segmented:has(.segment:nth-child(2) input:checked)::before {
-  transform: translateX(calc(var(--segment-width) - var(--segment-overlap)));
-}
-
-.segment {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: var(--segment-width);
-  height: 32px;
-  border-radius: 999px;
-  color: rgba(255, 255, 255, 0.55);
-  cursor: pointer;
-  transition: color 180ms ease;
-}
-
-.segment + .segment {
-  margin-left: calc(-1 * var(--segment-overlap));
-}
-
-.segment:hover {
-  color: #fff;
-}
-
-.segment:has(input:checked) {
-  color: #fff;
-}
-
-.segment:has(input:focus-visible) {
-  outline: 2px solid #4c9aff;
-  outline-offset: -2px;
 }
 
 .motion-toggle {
@@ -215,7 +145,8 @@
   background: var(--surface-fill-hover);
 }
 
-/* Pause and play share the same cell; the swap crossfades with a small turn and scale. */
+/* The two icons of a round button (pause/play, moon/sparkles) share one cell; the swap crossfades
+   with a small turn and scale. */
 .motion-icon {
   grid-area: 1 / 1;
   opacity: 0;
@@ -234,9 +165,7 @@
   .motion-toggle,
   .motion-icon,
   .modifier-button,
-  .modifier-value,
-  .segmented::before,
-  .segment {
+  .modifier-value {
     transition: none;
   }
 }
@@ -574,12 +503,27 @@ input:focus-visible {
   letter-spacing: 0;
 }
 
+/* The number lands with a small pop: it starts a little large and settles to its real size. */
+.last-roll-total.is-landed {
+  animation: total-land 140ms ease-out;
+}
+
+@keyframes total-land {
+  from {
+    transform: scale(1.14);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
 .last-roll-breakdown {
   padding-top: 4px;
   font-size: 13.6px;
   font-weight: 500;
   opacity: 0.8;
-  transition: opacity 200ms ease;
+  transition: opacity 120ms ease;
 }
 
 /* Hidden while the number spins, then fades in once it lands. */
@@ -605,7 +549,7 @@ input:focus-visible {
   transition:
     width 120ms ease,
     height 120ms ease,
-    opacity 120ms ease;
+    opacity 90ms ease;
 }
 
 /* Fades out quickly as the roll starts. */
@@ -629,6 +573,10 @@ input:focus-visible {
   .last-roll-breakdown,
   .last-roll .roll-button {
     transition: none;
+  }
+
+  .last-roll-total.is-landed {
+    animation: none;
   }
 }
 

@@ -6,15 +6,16 @@ interface ViewControlsProps {
 }
 
 // Icons from Lucide (ISC license): https://lucide.dev
-function SparklesIcon() {
+function SparklesIcon({ className }: { className: string }) {
   return (
     <svg
+      className={className}
       width="16"
       height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.75"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -27,15 +28,16 @@ function SparklesIcon() {
   )
 }
 
-function MoonIcon() {
+function MoonIcon({ className }: { className: string }) {
   return (
     <svg
+      className={className}
       width="16"
       height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.75"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -45,37 +47,25 @@ function MoonIcon() {
   )
 }
 
-// Background controls: a Trippy (bright) / Calm (dark) segmented switch and a separate pause/play button,
-// each in its own glass container. The segments are real radio inputs, so arrow keys and screen readers work natively.
+// Two round glass buttons. The view button shows the current view (sparkles for Trippy, the moon
+// for Calm), and its label says what a click will do. The pause button shows the action instead.
 export function ViewControls({ trippy, onSelectTrippy, paused, onTogglePaused }: ViewControlsProps) {
+  const viewLabel = trippy ? 'Switch to the Calm background' : 'Switch to the Trippy background'
   const pauseLabel = paused ? 'Play background animation' : 'Pause background animation'
 
   return (
     <div className="view-controls">
-      <div className="segmented glass-control" role="radiogroup" aria-label="Background view">
-        <label className="segment" title="Trippy">
-          <input
-            type="radio"
-            name="background-view"
-            className="sr-only"
-            aria-label="Trippy"
-            checked={trippy}
-            onChange={() => onSelectTrippy(true)}
-          />
-          <SparklesIcon />
-        </label>
-        <label className="segment" title="Calm">
-          <input
-            type="radio"
-            name="background-view"
-            className="sr-only"
-            aria-label="Calm"
-            checked={!trippy}
-            onChange={() => onSelectTrippy(false)}
-          />
-          <MoonIcon />
-        </label>
-      </div>
+      <button
+        type="button"
+        className="motion-toggle glass-control"
+        onClick={() => onSelectTrippy(!trippy)}
+        aria-label={viewLabel}
+        title={viewLabel}
+      >
+        {/* Both icons stay mounted and stacked; the inactive one is faded out so the swap can animate. */}
+        <SparklesIcon className={trippy ? 'motion-icon is-active' : 'motion-icon'} />
+        <MoonIcon className={trippy ? 'motion-icon' : 'motion-icon is-active'} />
+      </button>
       <button
         type="button"
         className="motion-toggle glass-control"
@@ -83,7 +73,6 @@ export function ViewControls({ trippy, onSelectTrippy, paused, onTogglePaused }:
         aria-label={pauseLabel}
         title={pauseLabel}
       >
-        {/* Both icons stay mounted and stacked; the inactive one is faded out so the swap can animate. */}
         <svg
           className={paused ? 'motion-icon' : 'motion-icon is-active'}
           width="16"
