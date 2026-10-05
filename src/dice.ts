@@ -27,8 +27,19 @@ export interface RollRecord {
   rolledAt: number
 }
 
+// Uniform integer in [0, max) from the browser's cryptographic random source. Values from the
+// uneven tail of the 32-bit range are rejected and redrawn so no face is ever favored.
+function randomInt(max: number): number {
+  const limit = 2 ** 32 - (2 ** 32 % max)
+  const buffer = new Uint32Array(1)
+  do {
+    crypto.getRandomValues(buffer)
+  } while (buffer[0] >= limit)
+  return buffer[0] % max
+}
+
 export function rollDie(size: DieSize): number {
-  return Math.floor(Math.random() * size) + 1
+  return randomInt(size) + 1
 }
 
 export function rollTray(tray: Tray): DieResult[] {
@@ -47,4 +58,9 @@ export function formatRoll(dice: DieResult[]): string {
   return Array.from(bySize.entries())
     .map(([size, values]) => `${values.length}d${size} (${values.join(', ')})`)
     .join(' + ')
+}
+
+// Lowest and highest totals this roll could have produced; the reveal animation flickers within it.
+export function totalRange(dice: DieResult[]): { min: number; max: number } {
+  return { min: dice.length, max: dice.reduce((sum, die) => sum + die.size, 0) }
 }

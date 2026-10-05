@@ -1,7 +1,12 @@
 :root {
-  --font-ui: 'Host Grotesk', system-ui, sans-serif;
+  --font-ui: 'Space Grotesk', system-ui, sans-serif;
 
   --card-fill: rgba(21, 21, 21, 0.6);
+  --surface-fill: rgba(21, 21, 21, 0.4);
+  --surface-fill-hover: rgba(21, 21, 21, 0.6);
+  --chip-fill: rgba(21, 21, 21, 0.6);
+  --switch-off: rgba(10, 10, 15, 0.55);
+  --glass-ring: none;
 }
 
 .app {
@@ -11,6 +16,7 @@
   padding: 16px 12px 12px;
   box-sizing: border-box;
   font-family: var(--font-ui);
+  letter-spacing: 0.02em;
   gap: 8px;
   overflow-y: auto;
   /* Text always sits on the animated gradient or a dark card, so it stays light regardless of theme. */
@@ -61,6 +67,25 @@
   }
 }
 
+/* Calm view: the same layout on the dark-grey gradient, with light glass so surfaces still read. */
+.app.is-calm {
+  --card-fill: rgba(255, 255, 255, 0.06);
+  --surface-fill: rgba(255, 255, 255, 0.08);
+  --surface-fill-hover: rgba(255, 255, 255, 0.15);
+  --chip-fill: rgba(255, 255, 255, 0.1);
+  --switch-off: rgba(10, 10, 15, 0.55);
+  /* Glass rim: a thin inset edge plus a slightly brighter top highlight. */
+  --glass-ring: inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.app.is-calm .logo img {
+  filter: invert(1);
+}
+
+.app.is-calm .clear-button {
+  color: #fff;
+}
+
 .gradient-bg {
   position: fixed;
   inset: 0;
@@ -87,16 +112,89 @@
   line-height: 0;
 }
 
+/* The Trippy/Calm switch and the pause/play button are separate glass controls. */
+.view-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.glass-control {
+  height: 32px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: var(--surface-fill);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--glass-ring);
+}
+
+/* Trippy / Calm segmented switch: two radio inputs with a highlighted selected segment. */
+.segmented {
+  position: relative;
+  display: flex;
+  /* No padding: the active pill fills its half of the container edge to edge. The glass rim is
+     drawn by ::after (below) so it stays visible on top of the pill. */
+  box-shadow: none;
+}
+
+.segmented::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  box-shadow: var(--glass-ring);
+  pointer-events: none;
+}
+
+/* The active pill is the same fill as the "Roll in secret" switch's off state. It is one element
+   that slides between the segments (whole-pixel moves keep it crisp). */
+.segmented::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 35px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--switch-off);
+  transition: transform 180ms cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.segmented:has(.segment:nth-child(2) input:checked)::before {
+  transform: translateX(35px);
+}
+
+.segment {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 32px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.segment:hover {
+  color: #fff;
+}
+
+.segment:has(input:checked) {
+  color: #fff;
+}
+
+.segment:has(input:focus-visible) {
+  outline: 2px solid #4c9aff;
+  outline-offset: -2px;
+}
+
 .motion-toggle {
   display: grid;
   place-items: center;
   width: 32px;
-  height: 32px;
   padding: 0;
   border: none;
-  border-radius: 10px;
-  background: rgba(21, 21, 21, 0.4);
-  backdrop-filter: blur(8px);
   color: #fff;
   cursor: pointer;
   transition: background-color 100ms ease;
@@ -104,11 +202,29 @@
 
 .motion-toggle:hover,
 .motion-toggle:active {
-  background: rgba(21, 21, 21, 0.6);
+  background: var(--surface-fill-hover);
+}
+
+/* Pause and play share the same cell; the swap crossfades with a small turn and scale. */
+.motion-icon {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.motion-icon.is-active {
+  opacity: 1;
+  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .motion-toggle {
+  .motion-toggle,
+  .motion-icon,
+  .segmented::before,
+  .segment {
     transition: none;
   }
 }
@@ -124,6 +240,7 @@
 
 button {
   font-family: inherit;
+  letter-spacing: inherit;
 }
 
 button:focus-visible,
@@ -161,8 +278,9 @@ input:focus-visible {
   padding: 0 6.4px;
   border: none;
   border-radius: 12px;
-  background: rgba(21, 21, 21, 0.4);
+  background: var(--surface-fill);
   backdrop-filter: blur(8px);
+  box-shadow: var(--glass-ring);
   color: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -173,7 +291,7 @@ input:focus-visible {
 /* Hover/press: the glass deepens from 40% to 60% (the design's hover state). */
 .die-buttons button:hover,
 .die-buttons button:active {
-  background: rgba(21, 21, 21, 0.6);
+  background: var(--surface-fill-hover);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -196,9 +314,9 @@ input:focus-visible {
   gap: 4px;
   min-height: 32px;
   padding: 0 8px 0 12px;
-  border: 1px solid #ffa63a;
+  border: 1px solid #fff;
   border-radius: 48px;
-  background: rgba(21, 21, 21, 0.6);
+  background: var(--chip-fill);
   backdrop-filter: blur(8px);
   color: #fff;
   font-size: 13.333px;
@@ -237,6 +355,7 @@ input:focus-visible {
   border-radius: 12px;
   background: var(--card-fill);
   backdrop-filter: blur(10px);
+  box-shadow: var(--glass-ring);
   font-size: 13.6px;
   cursor: pointer;
 }
@@ -249,7 +368,7 @@ input:focus-visible {
   height: 24px;
   margin: 0;
   border-radius: 999px;
-  background: rgba(10, 10, 15, 0.55);
+  background: var(--switch-off);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -288,6 +407,7 @@ input:focus-visible {
   border-radius: 12px;
   background: var(--card-fill);
   backdrop-filter: blur(10px);
+  box-shadow: var(--glass-ring);
   text-align: center;
 }
 
@@ -305,8 +425,9 @@ input:focus-visible {
 
 .last-roll-total {
   font-size: 56px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 56px;
+  letter-spacing: 0;
 }
 
 .last-roll-breakdown {
@@ -314,33 +435,54 @@ input:focus-visible {
   font-size: 13.6px;
   font-weight: 500;
   opacity: 0.8;
+  transition: opacity 200ms ease;
+}
+
+/* Hidden while the number spins, then fades in once it lands. */
+.last-roll-breakdown.is-pending {
+  opacity: 0;
+  transition: none;
 }
 
 .last-roll .roll-button {
+  /* Centered with layout (not translate) so it never lands on a half pixel. */
   position: absolute;
-  top: 50%;
-  left: 50%;
+  inset: 0;
+  margin: auto;
   width: min(347px, calc(100% - 32px));
   height: 40px;
-  transform: translate(-50%, -50%);
   border: 1px solid #b07bff;
   border-radius: 48px;
   background: #fff;
   color: #1a1a1a;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 120ms ease;
+  transition:
+    width 120ms ease,
+    height 120ms ease,
+    opacity 120ms ease;
 }
 
-/* Hover/press: stays white with its border and grows slightly. */
+/* Fades out quickly as the roll starts. */
+.last-roll .roll-button.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/*
+ * Hover/press: grows by whole pixels. A scale() transform lands on fractional pixels,
+ * which softens the border and text; changing the size keeps both crisp.
+ */
 .last-roll .roll-button:hover,
 .last-roll .roll-button:active {
-  transform: translate(-50%, -50%) scale(1.03);
+  width: calc(min(347px, calc(100% - 32px)) + 10px);
+  height: 42px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .last-roll-content,
+  .last-roll-breakdown,
   .last-roll .roll-button {
     transition: none;
   }
@@ -357,6 +499,7 @@ input:focus-visible {
   border-radius: 12px;
   background: var(--card-fill);
   backdrop-filter: blur(10px);
+  box-shadow: var(--glass-ring);
 }
 
 .history-section h2 {
@@ -396,7 +539,7 @@ input:focus-visible {
 }
 
 .roll-player {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .roll-breakdown {
@@ -406,7 +549,7 @@ input:focus-visible {
 .roll-total {
   flex-shrink: 0;
   font-size: 13.6px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .sr-only {

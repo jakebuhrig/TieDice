@@ -33,6 +33,7 @@ d3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24, d30, d100.
 - On roll: show the per-die breakdown and the total sum.
 - Staged dice appear as pills (orange border, circled × to remove one die) with a text-style Clear button after them.
 - There is no standing Roll bar. While dice are staged, the previous result in the last-roll card blurs back and a white "Roll the dice" pill with a purple border appears over it; hover and press grow it slightly. After a roll the pill goes away and the card shows the new result.
+- Reveal animation: the pill fades out, the big number flickers through totals the dice could actually produce and decelerates onto the real one (about 0.75s in total), then the breakdown fades in. The roll is decided immediately but published to the room only when the number lands, so nobody sees the result before the roller does; closing the popover mid-reveal publishes it right away. People who prefer reduced motion skip the animation. The big card only ever shows the roller's own result; other players' rolls appear only in the history.
 
 ### Hidden Roll
 
@@ -48,7 +49,7 @@ d3, d4, d5, d6, d7, d8, d10, d12, d14, d16, d20, d24, d30, d100.
 
 ### Presentation
 
-- **Now**: numeric result display on dark glass surfaces over an animated moving-gradient background (a WebGL2 port of the Figma "Moving gradient" shader). The background has a pause/play button in the header; the choice is remembered per browser, and people who prefer reduced motion start paused. No 2D die illustrations and no 3D yet.
+- **Now**: numeric result display on dark glass surfaces over an animated moving-gradient background (a WebGL2 port of the Figma "Moving gradient" shader). The header has one glass container with a Trippy/Calm segmented switch (Lucide sparkles and moon icons) and a pause/play button. Trippy (the default) is the bright palette; Calm is the same swirl in subtle dark greys with lighter glass surfaces and a white logo. Both choices are remembered per browser, and people who prefer reduced motion start paused. No 2D die illustrations and no 3D yet.
 - **Later**: procedural 3D dice, skipping an illustrated middle step. Candidate approach: [three-polydice](https://github.com/manthrax/three-polydice) (MIT, Three.js + Ammo.js) already procedurally generates d14/d16/d20/d24/d30/d100 via closed-form geometry (no hand-made model assets); d3/d5/d7 aren't covered yet but are simple enough shapes to extend the same way.
 
 ## Non-goals for Phase 1

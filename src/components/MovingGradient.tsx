@@ -1,19 +1,20 @@
 import { useEffect, useRef } from 'react'
-import { startMovingGradient, type GradientController } from '../movingGradient'
+import { startMovingGradient, type GradientController, type GradientView } from '../movingGradient'
 
 interface MovingGradientProps {
   paused: boolean
+  view: GradientView
 }
 
-export function MovingGradient({ paused }: MovingGradientProps) {
+export function MovingGradient({ paused, view }: MovingGradientProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const controllerRef = useRef<GradientController | null>(null)
-  const initialPaused = useRef(paused)
+  const initial = useRef({ paused, view })
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const controller = startMovingGradient(canvas, { paused: initialPaused.current })
+    const controller = startMovingGradient(canvas, initial.current)
     controllerRef.current = controller
     return () => {
       controller.destroy()
@@ -24,6 +25,10 @@ export function MovingGradient({ paused }: MovingGradientProps) {
   useEffect(() => {
     controllerRef.current?.setPaused(paused)
   }, [paused])
+
+  useEffect(() => {
+    controllerRef.current?.setView(view)
+  }, [view])
 
   return (
     <div className="gradient-bg" aria-hidden="true">

@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/host-grotesk": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "@owlbear-rodeo/sdk": "^3.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

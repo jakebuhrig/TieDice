@@ -24,10 +24,21 @@ function hex(value: string): [number, number, number] {
 
 const PALETTE = ['FFA63A', 'FFF04D', 'B07BFF', '4DE88A', '3AD0FF', 'FF5FA2']
 
-const DEFAULT_STOPS: GradientStop[] = PALETTE.map((color, index) => ({
+export type GradientView = "trippy" | "calm"
+
+const TRIPPY_STOPS: GradientStop[] = PALETTE.map((color, index) => ({
   position: index / (PALETTE.length - 1),
   color: hex(color),
 }))
+
+// Same swirl, in subtle dark greys: a narrow lightness range keeps the pattern visible but quiet.
+const CALM_LIGHTNESS = [0.085, 0.115, 0.095, 0.13, 0.09, 0.11]
+const CALM_STOPS: GradientStop[] = CALM_LIGHTNESS.map((value, index) => ({
+  position: index / (CALM_LIGHTNESS.length - 1),
+  color: [value, value, value],
+}))
+
+const STOPS_BY_VIEW: Record<GradientView, GradientStop[]> = { trippy: TRIPPY_STOPS, calm: CALM_STOPS }
 
 const START_OFFSET_SECONDS = 20
 const RENDER_SCALE = 0.5
@@ -411,19 +422,19 @@ function zoomFor(aspect: number): number {
 
 export interface GradientController {
   setPaused(paused: boolean): void
+  setView(view: GradientView): void
   destroy(): void
 }
 
-const INERT_CONTROLLER: GradientController = { setPaused() {}, destroy() {} }
+const INERT_CONTROLLER: GradientController = { setPaused() {}, setView() {}, destroy() {} }
 
 // The animation advances only while running, so pausing and resuming never makes it jump.
 const MAX_FRAME_SECONDS = 0.1
 
 export function startMovingGradient(
   canvas: HTMLCanvasElement,
-  options: { paused: boolean; stops?: GradientStop[] },
+  options: { paused: boolean; view: GradientView },
 ): GradientController {
-  const stops = options.stops ?? DEFAULT_STOPS
   const gl = canvas.getContext("webgl2", {
     alpha: false,
     antialias: true,
@@ -472,20 +483,29 @@ export function startMovingGradient(
   gl.uniform1f(uniform("u_twist"), PARAMS.twist)
   gl.uniform1f(uniform("u_detail"), PARAMS.detail)
 
+  const colorsLocation = uniform("u_colors[0]")
+  const stopsLocation = uniform("u_stops[0]")
+  const countLocation = uniform("u_count")
   const colors = new Float32Array(24)
   const positions = new Float32Array(8)
-  const count = Math.min(8, stops.length)
-  for (let i = 0; i < count; i += 1) {
-    colors.set(stops[i].color, i * 3)
-    positions[i] = stops[i].position
+
+  const applyStops = (stops: GradientStop[]) => {
+    colors.fill(0)
+    positions.fill(0)
+    const count = Math.min(8, stops.length)
+    for (let i = 0; i < count; i += 1) {
+      colors.set(stops[i].color, i * 3)
+      positions[i] = stops[i].position
+    }
+    gl.uniform3fv(colorsLocation, colors)
+    gl.uniform1fv(stopsLocation, positions)
+    gl.uniform1i(countLocation, count)
+    gl.clearColor(stops[0].color[0], stops[0].color[1], stops[0].color[2], 1)
   }
-  gl.uniform3fv(uniform("u_colors[0]"), colors)
-  gl.uniform1fv(uniform("u_stops[0]"), positions)
-  gl.uniform1i(uniform("u_count"), count)
+  applyStops(STOPS_BY_VIEW[options.view])
 
   gl.enable(gl.DEPTH_TEST)
   gl.depthFunc(gl.LESS)
-  gl.clearColor(stops[0].color[0], stops[0].color[1], stops[0].color[2], 1)
 
   let paused = options.paused
   let elapsed = 0
@@ -529,6 +549,12 @@ export function startMovingGradient(
   else frame = requestAnimationFrame(loop)
 
   return {
+    setView(view) {
+      if (destroyed) return
+      applyStops(STOPS_BY_VIEW[view])
+      // While running the next frame picks it up; while paused nothing else would redraw.
+      if (paused) draw()
+    },
     setPaused(next) {
       if (destroyed || next === paused) return
       paused = next
