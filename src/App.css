@@ -6,6 +6,7 @@
   --surface-fill-hover: rgba(21, 21, 21, 0.6);
   --chip-fill: rgba(21, 21, 21, 0.6);
   --switch-off: rgba(10, 10, 15, 0.55);
+  --switch-off-hover: rgba(10, 10, 15, 0.75);
   /* Glass rim: a thin inset edge plus a slightly brighter top highlight. */
   --glass-ring: inset 0 0 0 1px rgba(255, 255, 255, 0.54), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -80,7 +81,10 @@
   --surface-fill: rgba(255, 255, 255, 0.08);
   --surface-fill-hover: rgba(255, 255, 255, 0.15);
   --chip-fill: rgba(255, 255, 255, 0.1);
-  --switch-off: rgba(10, 10, 15, 0.55);
+  /* The modifier pill and the switch's off track are light glass here, not near-black, which would
+     disappear into the dark background. */
+  --switch-off: rgba(255, 255, 255, 0.14);
+  --switch-off-hover: rgba(255, 255, 255, 0.22);
   /* A softer rim: the dark view needs less edge than the bright gradient. */
   --glass-ring: inset 0 0 0 1px rgba(255, 255, 255, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -425,7 +429,7 @@ input:focus-visible {
 
 .modifier-controls:hover .modifier-value,
 .modifier-value:focus {
-  background: rgba(10, 10, 15, 0.75);
+  background: var(--switch-off-hover);
 }
 
 .modifier-value:focus-visible {

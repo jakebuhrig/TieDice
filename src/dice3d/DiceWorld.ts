@@ -178,7 +178,9 @@ export class DiceWorld {
       die.body.collisionFilterGroup = group
       die.body.collisionFilterMask = SHARED_GROUP | group
       const cell = cells[i]
-      if (!cell) return
+      // A die too big for its lane (a crowded roll) is not walled in: it roams the whole floor. It
+      // still never touches another die, so its throw stays independent.
+      if (!cell || die.radius * 2.1 > Math.min(cell.x1 - cell.x0, cell.z1 - cell.z0)) return
       for (const wall of this.walls(cell.x0, cell.x1, cell.z0, cell.z1)) {
         wall.collisionFilterGroup = group
         wall.collisionFilterMask = group

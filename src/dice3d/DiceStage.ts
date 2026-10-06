@@ -7,9 +7,12 @@ import { DIE_COLORS, ROLLABLES, SHAPES, type Rollable } from './catalog'
 
 const HALF_WIDTH = 13
 const HALF_DEPTH = 7
-// The biggest and smallest a die is drawn (see rollDice), in stage units.
-const MAX_DIE_SIZE = 3.8
-const MIN_DIE_SIZE = 0.7
+// How big dice are drawn (see rollDice), in stage units. Up to FULL_SIZE_COUNT dice are all drawn at
+// DIE_SIZE, whatever they are, so ordinary rolls never zoom in and out. A bigger crowd shrinks the dice
+// gently (never below MIN_DIE_SIZE) so they do not pile on top of each other.
+const DIE_SIZE = 3
+const FULL_SIZE_COUNT = 6
+const MIN_DIE_SIZE = 1.9
 
 export interface StageOptions {
   // Makes the floor the same shape as the canvas (as wide as it is deep, scaled by the canvas's
@@ -19,8 +22,8 @@ export interface StageOptions {
   // flattens the perspective, so dice at the back of the floor are not much smaller than those at the
   // front; the camera moves back as far as it needs to keep the whole floor in frame.
   fov?: number
-  // Pulls the camera back by this factor beyond what just fits the floor (1.25 shows 25% more around
-  // it), so everything looks smaller and the dice have visible room to tumble.
+  // Makes the floor this many times bigger (in both directions) than the standard one, with the camera
+  // pulled back to keep it all in frame: everything looks smaller and the dice have more room to tumble.
   zoomOut?: number
   // How fast a throw plays back, as a multiple of real time. The physics itself always steps at a
   // fixed 1/60s, so this only changes how quickly the steps are played.
@@ -36,7 +39,7 @@ export interface RollOptions {
 export class DiceStage {
   readonly world: DiceWorld
   private readonly halfWidth: number
-  private readonly halfDepth = HALF_DEPTH
+  private readonly halfDepth: number
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
   private readonly camera: THREE.PerspectiveCamera
@@ -48,7 +51,6 @@ export class DiceStage {
   private disposed = false
   private readonly canvas: HTMLCanvasElement
   private readonly speed: number
-  private readonly zoomOut: number
   // The canvas is only redrawn while a throw plays or until this time (ms), so a stage with dice at
   // rest costs nothing.
   private renderUntil = 0
@@ -56,9 +58,10 @@ export class DiceStage {
   constructor(canvas: HTMLCanvasElement, options: StageOptions = {}) {
     this.canvas = canvas
     this.speed = options.speed ?? 1
-    this.zoomOut = options.zoomOut ?? 1
     const aspect = (canvas.clientWidth || 1) / (canvas.clientHeight || 1)
-    this.halfWidth = options.fitToCanvas ? Math.min(HALF_WIDTH, Math.max(5, HALF_DEPTH * aspect)) : HALF_WIDTH
+    const zoom = options.zoomOut ?? 1
+    this.halfDepth = HALF_DEPTH * zoom
+    this.halfWidth = options.fitToCanvas ? Math.max(5, this.halfDepth * aspect) : HALF_WIDTH * zoom
     this.world = new DiceWorld({ halfWidth: this.halfWidth, halfDepth: this.halfDepth })
     this.camera = new THREE.PerspectiveCamera(options.fov ?? 38, 1, 0.1, 500)
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
@@ -107,11 +110,11 @@ export class DiceStage {
     this.renderer.setSize(width, height, false)
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
-    // Far enough up that the whole floor, with a little margin, is in view.
+    // Far enough up that the whole floor is in view with a margin: dice at the walls stand taller than the floor, so they look bigger than it.
     const reach = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)
-    const height3d = (this.halfDepth * 1.06) / reach
-    const width3d = (this.halfWidth * 1.06) / (reach * this.camera.aspect)
-    this.camera.position.set(0, Math.max(height3d, width3d) * this.zoomOut, 0)
+    const height3d = (this.halfDepth * 1.14) / reach
+    const width3d = (this.halfWidth * 1.14) / (reach * this.camera.aspect)
+    this.camera.position.set(0, Math.max(height3d, width3d), 0)
     this.camera.lookAt(0, 0, 0)
     this.invalidate()
   }
@@ -138,16 +141,13 @@ export class DiceStage {
     return dice
   }
 
-  // Throws a set of dice (a size and the value each must show), sized to fit the floor: the more dice,
-  // the smaller each is drawn, so every die keeps a lane big enough to tumble in.
+  // Throws a set of dice (a size and the value each must show). A die too big for its lane tumbles across
+  // the whole floor and may pass over its neighbours, since dice never collide.
   rollDice(dice: { size: number; value: number }[], options: RollOptions = {}): Promise<void> {
     this.clear()
     const names = dice.map((die) => `d${die.size}`)
-    const shapes = names.flatMap((name) => ROLLABLES[name].shapes)
-    const cells = this.world.layout(shapes.length)
-    const room = Math.min(...cells.map((cell) => Math.min(cell.x1 - cell.x0, cell.z1 - cell.z0)))
-    const biggest = Math.max(...shapes.map((shape) => SHAPES[shape].scale))
-    const size = Math.min(MAX_DIE_SIZE, Math.max(MIN_DIE_SIZE, (room * 0.48) / biggest))
+    const count = names.reduce((sum, name) => sum + ROLLABLES[name].shapes.length, 0)
+    const size = Math.max(MIN_DIE_SIZE, DIE_SIZE * Math.sqrt(Math.min(1, FULL_SIZE_COUNT / count)))
     names.forEach((name) => this.addRoll(name, { size, ...DIE_COLORS[name] }))
     return this.roll(
       dice.map((die) => die.value),
