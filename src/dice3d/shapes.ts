@@ -9,10 +9,10 @@ export const TEXTURE_SIZE = 256
 export const DIE_COLOR = '#dcecf8'
 export const DIE_NUMBER_COLOR = '#12263a'
 
-// How tall every number is on every die, as a fraction of the die's size: the height of a digit,
-// bottom to top. This is the size the numbers on the d24 naturally came out at, the smallest of any
-// die, so every number is as small as the smallest was (the faces of a d24 are small).
-export const NUMBER_HEIGHT = 0.219
+// How tall a number is on a die with a numberScale of 1, as a fraction of the requested die size: the
+// height of a digit, bottom to top. Digits are about the same physical height on every die, as on real
+// dice, with a little give per die (DieShape.numberScale) for faces that are roomy or tight.
+export const NUMBER_HEIGHT = 0.44
 // A digit's height as a fraction of the font size, measured for Space Grotesk.
 export const DIGIT_HEIGHT_RATIO = 0.72
 
@@ -35,6 +35,9 @@ export interface DieShape {
   chamfer: number
   // Scales the die relative to the requested size so the different shapes look about equally big.
   scale: number
+  // How much taller than the standard (NUMBER_HEIGHT) this die's numbers are; 1 if left out. Dice
+  // with roomy faces (the d6, d3) can carry bigger numbers than the d24's small faces allow.
+  numberScale?: number
   mass: number
   // Padding around the label inside its face texture.
   textMargin: number

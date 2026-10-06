@@ -57,13 +57,22 @@ export function Dice3DLab() {
     const count = stage.diceList.length
     const rows = count > 5 ? 2 : 1
     const columns = Math.ceil(count / rows)
+    // Each row is laid out left to right with the dice's own widths, so big dice get more room.
+    const gap = 0.9
+    const xs: number[] = []
+    for (let row = 0; row < rows; row++) {
+      const inRow = stage.diceList.slice(row * columns, (row + 1) * columns)
+      const total = inRow.reduce((sum, die) => sum + 2 * die.radius, 0) + gap * (inRow.length - 1)
+      let x = -total / 2
+      inRow.forEach((die) => {
+        xs.push(x + die.radius)
+        x += 2 * die.radius + gap
+      })
+    }
     stage.diceList.forEach((die, i) => {
       const row = Math.floor(i / columns)
-      const rowCount = Math.min(columns, count - row * columns)
-      // Far enough apart that no two dice touch as they settle, and low enough that they barely move.
-      const x = (i - row * columns - (rowCount - 1) / 2) * (rows === 1 ? 4.2 * (dieSize / 3) : 3.4)
       const z = rows === 1 ? 0 : (row - 0.5) * 6.4
-      die.body.position.set(x, rows === 1 ? 4 : die.radius * 1.1 + 0.4, z)
+      die.body.position.set(xs[i], rows === 1 ? 4 : die.radius * 1.1 + 0.4, z)
       die.body.quaternion.setFromEuler(Math.random() * 0.8, Math.random() * Math.PI, Math.random() * 0.8)
       die.syncMesh()
     })
@@ -109,7 +118,7 @@ export function Dice3DLab() {
         ))}
         <button
           onClick={() => {
-            setDieSize(2)
+            setDieSize(1.4)
             setDice(Object.keys(ROLLABLES))
           }}
         >

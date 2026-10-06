@@ -138,7 +138,7 @@ export class Die {
   // every other face of every die.
   private fontPixels(label: number): number {
     const texel = this.texel.get(label) ?? 1
-    return (NUMBER_HEIGHT * this.size) / (DIGIT_HEIGHT_RATIO * texel)
+    return (NUMBER_HEIGHT * (this.shape.numberScale ?? 1) * this.size) / (DIGIT_HEIGHT_RATIO * texel)
   }
 
   private labelTexture(text: string, label: number, corners?: number[]): THREE.CanvasTexture {
