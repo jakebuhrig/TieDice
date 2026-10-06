@@ -207,21 +207,28 @@ input:focus-visible {
   gap: 8px;
 }
 
+/* All the dice live in one glass track; each button is just its picture, with a soft highlight on hover. */
 .die-buttons {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 5px 6px;
-}
-
-.die-buttons button {
-  height: 40px;
-  min-width: 40px;
-  padding: 0 6.4px;
-  border: none;
+  gap: 2px;
+  padding: 6px;
   border-radius: 12px;
   background: var(--surface-fill);
   backdrop-filter: blur(8px);
   box-shadow: var(--glass-ring);
+}
+
+.die-buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
   color: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -229,10 +236,23 @@ input:focus-visible {
   transition: background-color 100ms ease;
 }
 
-/* Hover/press: the glass deepens from 40% to 60% (the design's hover state). */
+/* The die's picture is its label; it sits in the button without growing it. */
+.die-preview {
+  display: block;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+}
+
+/* Hover/press: a soft light patch behind the die. */
 .die-buttons button:hover,
 .die-buttons button:active {
-  background: var(--surface-fill-hover);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.die-buttons button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -474,21 +494,23 @@ input:focus-visible {
   }
 }
 
+/* The roll area: a tall card the dice tumble across, with the total tucked along its bottom edge. */
 .last-roll {
   position: relative;
-  padding: 24px 16px;
+  flex: none;
+  height: 208px;
   border-radius: 12px;
   background: var(--card-fill);
   backdrop-filter: blur(10px);
   box-shadow: var(--glass-ring);
   text-align: center;
+  overflow: hidden;
 }
 
 /* Staging dice blurs the previous result back so the Roll button can take its place. */
 .last-roll-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  position: absolute;
+  inset: 0;
   transition: filter 150ms ease;
 }
 
@@ -496,11 +518,54 @@ input:focus-visible {
   filter: blur(7px);
 }
 
+/* The 3D dice are drawn on this canvas, which fills the card above the total's strip; it never takes
+   clicks. Its shape is close to the floor the dice are thrown on. */
+.last-roll-dice {
+  position: absolute;
+  inset: 0 0 34px;
+  display: block;
+  width: 100%;
+  height: calc(100% - 34px);
+  pointer-events: none;
+}
+
+.last-roll-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+/* The number rolled, kept small and quiet: the dice are the star, this is for ease of use. */
+.last-roll-caption {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  left: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+/* Hidden while the dice are in the air, then fades in once they land. */
+.last-roll-caption.is-pending {
+  opacity: 0;
+  transition: none;
+}
+
 .last-roll-total {
-  font-size: 56px;
+  flex: none;
+  font-size: 28px;
   font-weight: 600;
-  line-height: 56px;
+  line-height: 32px;
   letter-spacing: 0;
+  opacity: 0.85;
 }
 
 /* The number lands with a small pop: it starts a little large and settles to its real size. */
@@ -519,17 +584,15 @@ input:focus-visible {
 }
 
 .last-roll-breakdown {
-  padding-top: 4px;
-  font-size: 13.6px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
   font-weight: 500;
-  opacity: 0.8;
-  transition: opacity 120ms ease;
-}
-
-/* Hidden while the number spins, then fades in once it lands. */
-.last-roll-breakdown.is-pending {
-  opacity: 0;
-  transition: none;
+  opacity: 0.65;
 }
 
 .last-roll .roll-button {
@@ -570,7 +633,7 @@ input:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .last-roll-content,
-  .last-roll-breakdown,
+  .last-roll-caption,
   .last-roll .roll-button {
     transition: none;
   }

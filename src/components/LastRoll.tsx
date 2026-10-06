@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatRoll, totalRange, type RollRecord } from '../dice'
+import { formatRoll, type RollRecord } from '../dice'
+import { useDiceStage } from '../useDiceStage'
 
 interface LastRollProps {
   roll: RollRecord | undefined
@@ -9,113 +10,103 @@ interface LastRollProps {
   onLanded: (record: RollRecord) => void
 }
 
-// Reveal timing: the pill fades, then the number flickers through plausible totals and decelerates
-// onto the real one with a small pop, then the breakdown fades in. About 0.43s from click to landed.
-// The pill fade should match the roll button's opacity transition in App.css.
+// Reveal timing: the pill fades, then the dice are thrown and the total fades in once they have come
+// to rest. The pill fade should match the roll button's opacity transition in App.css.
 const LEAVE_MS = 90
-const FIRST_TICK_MS = 26
-// Each tick lasts this many times longer than the one before, so the flicker slows toward the end.
-const TICK_SLOWDOWN = 1.25
-const SPIN_MS = 340
 
-type Phase = 'idle' | 'leaving' | 'spinning'
+type Phase = 'idle' | 'leaving' | 'throwing'
 
-function randomTotal(min: number, max: number, avoid: number | null): number {
-  if (max <= min) return min
-  let value = min + Math.floor(Math.random() * (max - min + 1))
-  if (value === avoid) value = value === max ? min : value + 1
-  return value
-}
-
-// When dice are staged, the previous result blurs back and the Roll button takes its place in the card.
+// The last-roll card: the dice tumble across it, and come to rest showing what was rolled. The total
+// sits quietly underneath for ease of use. When dice are staged, the previous result blurs back and
+// the Roll button takes its place in the card.
 export function LastRoll({ roll, rolling, canRoll, onRoll, onLanded }: LastRollProps) {
-  // Which roll the spin has started for. Until then a roll in progress counts as "leaving".
-  const [spinningId, setSpinningId] = useState<string | null>(null)
-  // The roll whose number has just landed; it gets the landing pop.
+  const { canvasRef, prepare, throwDice } = useDiceStage()
+  // Which roll the throw has started for. Until then a roll in progress counts as "leaving".
+  const [throwingId, setThrowingId] = useState<string | null>(null)
+  // The roll whose total has just appeared; it gets the landing pop.
   const [landedId, setLandedId] = useState<string | null>(null)
-  const [flicker, setFlicker] = useState<number | null>(null)
   const [announcement, setAnnouncement] = useState('')
+  // Which roll the dice on the stage are showing.
+  const stagedId = useRef<string | null>(null)
   const onLandedRef = useRef(onLanded)
 
   useEffect(() => {
     onLandedRef.current = onLanded
   }, [onLanded])
 
+  // Load the 3D code as soon as dice are staged, so it is ready by the time Roll is pressed.
+  useEffect(() => {
+    if (canRoll) void prepare()
+  }, [canRoll, prepare])
+
   useEffect(() => {
     if (!rolling) return
 
-    const { min, max } = totalRange(rolling.dice, rolling.modifier)
-    const timers: number[] = []
-    let shown: number | null = null
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      setAnnouncement('')
+      setThrowingId(rolling.id)
+      stagedId.current = rolling.id
+      void throwDice(rolling.dice, false)
+        .catch(() => undefined)
+        .then(() => {
+          if (cancelled) return
+          setThrowingId(null)
+          setLandedId(rolling.id)
+          setAnnouncement(`Rolled ${rolling.total}`)
+          onLandedRef.current(rolling)
+        })
+    }, LEAVE_MS)
 
-    timers.push(
-      window.setTimeout(() => {
-        setAnnouncement('')
-        // Show a number immediately so the card never flashes empty between the old and new result.
-        shown = randomTotal(min, max, null)
-        setFlicker(shown)
-        setSpinningId(rolling.id)
-        let elapsed = 0
-        let tick = FIRST_TICK_MS
-        while (elapsed < SPIN_MS - tick) {
-          elapsed += tick
-          timers.push(
-            window.setTimeout(() => {
-              shown = randomTotal(min, max, shown)
-              setFlicker(shown)
-            }, elapsed),
-          )
-          tick *= TICK_SLOWDOWN
-        }
-        timers.push(
-          window.setTimeout(() => {
-            setFlicker(null)
-            setSpinningId(null)
-            setLandedId(rolling.id)
-            setAnnouncement(`Rolled ${rolling.total}`)
-            onLandedRef.current(rolling)
-          }, SPIN_MS),
-        )
-      }, LEAVE_MS),
-    )
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [rolling, throwDice])
 
-    return () => timers.forEach((timer) => window.clearTimeout(timer))
-  }, [rolling])
+  // A result that is not being thrown (the roll saved from before the panel was opened, or any roll
+  // when motion is reduced) is simply shown, with its dice at rest.
+  useEffect(() => {
+    if (!roll || rolling || stagedId.current === roll.id) return
+    void throwDice(roll.dice, true)
+      .then((shown) => {
+        if (shown) stagedId.current = roll.id
+      })
+      .catch(() => undefined)
+  }, [roll, rolling, throwDice])
 
-  const phase: Phase = !rolling ? 'idle' : spinningId === rolling.id ? 'spinning' : 'leaving'
+  const phase: Phase = !rolling ? 'idle' : throwingId === rolling.id ? 'throwing' : 'leaving'
   const revealing = phase !== 'idle'
-  const spinning = phase === 'spinning'
+  const throwing = phase === 'throwing'
   const showPill = (canRoll && !revealing) || phase === 'leaving'
   const blurred = canRoll && !revealing
+  // The total stays out of sight until the dice have landed, so it never gives the result away.
+  const pending = revealing
 
   return (
     <section className="last-roll" aria-label="Your last roll">
       <div className={blurred ? 'last-roll-content is-blurred' : 'last-roll-content'}>
-        {roll || spinning ? (
-          <>
-            <div
-              className={
-                !spinning && roll?.id === landedId ? 'last-roll-total is-landed' : 'last-roll-total'
-              }
-              aria-hidden={spinning}
-            >
-              {spinning ? flicker : roll?.total}
-            </div>
-            <div className={spinning ? 'last-roll-breakdown is-pending' : 'last-roll-breakdown'}>
-              {spinning ? (
-                ' '
-              ) : (
-                roll && (
-                  <>
-                    {roll.hidden && <span className="sr-only">Hidden roll. </span>}
-                    {formatRoll(roll.dice, roll.modifier)}
-                  </>
-                )
+        <canvas ref={canvasRef} className="last-roll-dice" aria-hidden="true" />
+        {roll || throwing ? (
+          <div className={pending ? 'last-roll-caption is-pending' : 'last-roll-caption'}>
+            <div className="last-roll-breakdown">
+              {roll && (
+                <>
+                  {roll.hidden && <span className="sr-only">Hidden roll. </span>}
+                  {formatRoll(roll.dice, roll.modifier)}
+                </>
               )}
             </div>
-          </>
+            <div
+              className={
+                !pending && roll?.id === landedId ? 'last-roll-total is-landed' : 'last-roll-total'
+              }
+            >
+              {roll?.total}
+            </div>
+          </div>
         ) : (
-          <p className="hint">Your last roll will show here.</p>
+          <p className="hint last-roll-hint">Your last roll will show here.</p>
         )}
       </div>
       <div className="sr-only" role="status">

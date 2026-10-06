@@ -4,6 +4,8 @@ import { ModifierInput } from './ModifierInput'
 
 interface DiceTrayProps {
   tray: Tray
+  // A picture of each die (showing its highest face), by die size, as they become ready.
+  previews: Record<number, string>
   onAdd: (size: DieSize) => void
   onRemove: (size: DieSize) => void
   onClear: () => void
@@ -78,6 +80,7 @@ function EyeClosedIcon({ className }: { className: string }) {
 
 export function DiceTray({
   tray,
+  previews,
   onAdd,
   onRemove,
   onClear,
@@ -96,8 +99,13 @@ export function DiceTray({
             type="button"
             onClick={() => onAdd(size)}
             aria-label={`Add a d${size} to the roll`}
+            title={`d${size}`}
           >
-            d{size}
+            {previews[size] ? (
+              <img className="die-preview" src={previews[size]} alt="" width={44} height={44} />
+            ) : (
+              <>d{size}</>
+            )}
           </button>
         ))}
       </div>

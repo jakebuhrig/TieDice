@@ -20,13 +20,14 @@ const BASE_SHAPES: Record<string, DieShape> = {
 }
 
 // How big each die is next to the others, and how big its numbers are, set by eye against a photo of a
-// full DCC set. `scale` sizes the die (1 is the d20; the d24 and d30 run bigger and the d3 and d6
-// smaller, as on real dice); `numberScale` adjusts its digit height from the standard (NUMBER_HEIGHT).
+// full DCC set. `scale` sizes the die (1 is the d20); the d24 and d30 run bigger, as on real dice, and
+// the cubes (d3, d6) are sized up to match the d20 because a cube looks small at the same width.
+// `numberScale` adjusts a die's digit height from the standard (NUMBER_HEIGHT).
 const LOOK: Record<string, { scale: number; numberScale: number }> = {
-  d3: { scale: 0.83, numberScale: 1.25 },
+  d3: { scale: 1.1, numberScale: 1.25 },
   d4: { scale: 1.19, numberScale: 1 },
   d5: { scale: 1.12, numberScale: 1 },
-  d6: { scale: 0.95, numberScale: 1.25 },
+  d6: { scale: 1.1, numberScale: 1.25 },
   d7: { scale: 1.32, numberScale: 1 },
   d8: { scale: 1.17, numberScale: 1.05 },
   d10: { scale: 1.19, numberScale: 1.1 },

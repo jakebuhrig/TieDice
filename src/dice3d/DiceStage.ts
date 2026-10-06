@@ -7,12 +7,33 @@ import { ROLLABLES, SHAPES, type Rollable } from './catalog'
 
 const HALF_WIDTH = 13
 const HALF_DEPTH = 7
+// The biggest and smallest a die is drawn (see rollDice), in stage units.
+const MAX_DIE_SIZE = 3.8
+const MIN_DIE_SIZE = 0.7
+
+export interface StageOptions {
+  // Moves the camera in (below 1) or out (above 1), to frame the floor in a canvas of any shape.
+  cameraScale?: number
+  // The camera's vertical field of view in degrees (38 if left out). A narrow view from far away
+  // flattens the perspective, so dice at the back of the floor are not much smaller than those at the
+  // front; move the camera out with cameraScale to keep the floor in frame.
+  fov?: number
+  // How fast a throw plays back, as a multiple of real time. The physics itself always steps at a
+  // fixed 1/60s, so this only changes how quickly the steps are played.
+  speed?: number
+}
+
+export interface RollOptions {
+  // Skip the throw: work out where the dice would land and put them there. For showing a result
+  // that has already happened, and for people who prefer reduced motion.
+  instant?: boolean
+}
 
 export class DiceStage {
   readonly world = new DiceWorld({ halfWidth: HALF_WIDTH, halfDepth: HALF_DEPTH })
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
-  private readonly camera = new THREE.PerspectiveCamera(38, 1, 0.1, 500)
+  private readonly camera: THREE.PerspectiveCamera
   private readonly dice: Die[] = []
   private readonly rolls: { rollable: Rollable; dice: Die[] }[] = []
   private frame = 0
@@ -20,9 +41,15 @@ export class DiceStage {
   private accumulator = 0
   private disposed = false
   private readonly canvas: HTMLCanvasElement
+  private readonly speed: number
+  // The canvas is only redrawn while a throw plays or until this time (ms), so a stage with dice at
+  // rest costs nothing.
+  private renderUntil = 0
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, options: StageOptions = {}) {
     this.canvas = canvas
+    this.speed = options.speed ?? 1
+    this.camera = new THREE.PerspectiveCamera(options.fov ?? 38, 1, 0.1, 500)
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
     this.renderer.setClearColor(0x000000, 0)
     this.renderer.shadowMap.enabled = true
@@ -51,10 +78,14 @@ export class DiceStage {
     floor.receiveShadow = true
     this.scene.add(floor)
 
-    this.camera.position.set(0, 25, 14)
+    // Straight down on the floor, with the far edge at the top of the picture.
+    this.camera.position.set(0, 28, 0).multiplyScalar(options.cameraScale ?? 1)
+    this.camera.up.set(0, 0, -1)
     this.camera.lookAt(0, 0, 0)
 
     this.resize()
+    // The numbers are drawn once the font has loaded; draw again then.
+    void document.fonts?.ready.then(() => this.invalidate())
     this.lastTime = performance.now()
     this.frame = requestAnimationFrame(this.tick)
   }
@@ -67,6 +98,12 @@ export class DiceStage {
     this.renderer.setSize(width, height, false)
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
+    this.invalidate()
+  }
+
+  // Asks for the canvas to be redrawn for the next `ms` milliseconds.
+  invalidate(ms = 1500) {
+    this.renderUntil = Math.max(this.renderUntil, performance.now() + ms)
   }
 
   // Puts a die (or, for the d100, a pair) on the stage. Returns the dice it added. `scales` sets a
@@ -82,7 +119,25 @@ export class DiceStage {
       return die
     })
     this.rolls.push({ rollable, dice })
+    this.invalidate()
     return dice
+  }
+
+  // Throws a set of dice (a size and the value each must show), sized to fit the floor: the more dice,
+  // the smaller each is drawn, so every die keeps a lane big enough to tumble in.
+  rollDice(dice: { size: number; value: number }[], options: RollOptions = {}): Promise<void> {
+    this.clear()
+    const names = dice.map((die) => `d${die.size}`)
+    const shapes = names.flatMap((name) => ROLLABLES[name].shapes)
+    const cells = this.world.layout(shapes.length)
+    const room = Math.min(...cells.map((cell) => Math.min(cell.x1 - cell.x0, cell.z1 - cell.z0)))
+    const biggest = Math.max(...shapes.map((shape) => SHAPES[shape].scale))
+    const size = Math.min(MAX_DIE_SIZE, Math.max(MIN_DIE_SIZE, (room * 0.48) / biggest))
+    names.forEach((name) => this.addRoll(name, { size }))
+    return this.roll(
+      dice.map((die) => die.value),
+      options,
+    )
   }
 
   clear() {
@@ -96,7 +151,7 @@ export class DiceStage {
 
   // Throws everything on the stage from the left, rigged so each roll shows its result (one result
   // per roll, in the order they were added). Resolves once the dice rest.
-  roll(results: number[]): Promise<void> {
+  roll(results: number[], options: RollOptions = {}): Promise<void> {
     const throws: Throw[] = []
     this.rolls.forEach((entry, i) => {
       const values = entry.rollable.split(results[i])
@@ -111,11 +166,17 @@ export class DiceStage {
       die.syncMesh()
     }
     throws.forEach((_, index) => launchOne(index))
-    return this.world.roll(
+    const done = this.world.roll(
       throws,
       (dice) => dice.forEach((die) => launchOne(throws.findIndex((t) => t.die === die))),
       cells,
     )
+    // Play the whole throw at once, without drawing it.
+    if (options.instant) while (this.world.isPlaying) this.world.step()
+    this.invalidate(Infinity)
+    return done.then(() => {
+      this.renderUntil = performance.now() + 600
+    })
   }
 
   // Lets every die on the stage fall to the floor and rest there.
@@ -172,14 +233,14 @@ export class DiceStage {
     this.frame = requestAnimationFrame(this.tick)
 
     // Physics runs in fixed 1/60s steps so a replay matches the simulation exactly.
-    this.accumulator += Math.min((time - this.lastTime) / 1000, 0.1)
+    this.accumulator += Math.min((time - this.lastTime) / 1000, 0.1) * this.speed
     this.lastTime = time
     while (this.accumulator >= STEP) {
       if (this.world.isPlaying) this.world.step()
       this.accumulator -= STEP
     }
 
-    this.renderer.render(this.scene, this.camera)
+    if (this.world.isPlaying || time < this.renderUntil) this.renderer.render(this.scene, this.camera)
   }
 
   get diceList(): readonly Die[] {

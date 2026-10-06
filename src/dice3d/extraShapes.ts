@@ -358,6 +358,8 @@ function prismShape(
     mass: 330,
     textMargin: 1,
     readsBottom: true,
+    // The end that prints the biggest number (an end prints the number of the end opposite it).
+    previewFace: { label: n + 1 },
     numbers,
     throwPower,
     drawFace: (context, size, label, shown, fontPixels) => {

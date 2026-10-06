@@ -9,6 +9,7 @@ import { MovingGradient } from './components/MovingGradient'
 import { RollHistoryList } from './components/RollHistoryList'
 import { ViewControls } from './components/ViewControls'
 import { rollTotal, rollTray, type DieSize, type RollRecord, type Tray } from './dice'
+import { useDicePreviews } from './useDicePreviews'
 import { useGradientPaused } from './useGradientPaused'
 import { useOwlbearPlayer } from './useOwlbearPlayer'
 import { useRollHistory } from './useRollHistory'
@@ -21,6 +22,7 @@ function App() {
   const { history, appendPublicRoll } = useRollHistory()
   const [gradientPaused, toggleGradientPaused] = useGradientPaused()
   const [trippy, toggleTrippy] = useTrippy()
+  const dicePreviews = useDicePreviews()
   const selectTrippy = (next: boolean) => {
     if (next !== trippy) toggleTrippy()
   }
@@ -164,6 +166,7 @@ function App() {
       </header>
       <DiceTray
         tray={tray}
+        previews={dicePreviews}
         onAdd={addDie}
         onRemove={removeDie}
         onClear={() => setTray([])}

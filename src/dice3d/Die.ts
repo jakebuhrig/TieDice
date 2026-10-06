@@ -313,6 +313,50 @@ export class Die {
     return null
   }
 
+  // Poses the die for a still picture: the face showing `value` points straight up, with its number
+  // upright as seen from above (north is -z). The picture is taken from straight overhead.
+  poseForPreview(value: number) {
+    const spec = this.shape.previewFace
+    if (spec?.offset !== undefined) {
+      this.offsets[0] = spec.offset
+      this.refreshLabels()
+    }
+    const label = spec?.label ?? value
+    const face = this.faces.find((f) => f.label === label) ?? this.faces[0]
+    const up = this.textUp(face.label)
+
+    // Turn the face's own frame (number-up, normal, and the third axis) onto (-z, +y, +x).
+    const from = new THREE.Matrix4().makeBasis(up, face.normal, up.clone().cross(face.normal))
+    const to = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 0, 0))
+    const turn = new THREE.Quaternion().setFromRotationMatrix(to.multiply(from.transpose()))
+    this.body.quaternion.set(turn.x, turn.y, turn.z, turn.w)
+    this.syncMesh()
+    // A die whose numbers can move (the d7) is reprinted so this face shows the value.
+    if (!spec && this.canShowOnTop(value)) this.showValueOnTop(value)
+  }
+
+  // Which way is "up" for the number on the face with this label: the direction, in the die's own
+  // space, in which the face's texture coordinate v increases.
+  private textUp(label: number): THREE.Vector3 {
+    const geometry = this.mesh.geometry
+    const position = geometry.attributes.position
+    const uv = geometry.attributes.uv
+    const group = geometry.groups.find((g) => g.materialIndex === label)!
+    const at = (i: number) => new THREE.Vector3().fromBufferAttribute(position, group.start + i)
+    const e1 = at(1).sub(at(0))
+    const e2 = at(2).sub(at(0))
+    const dv1 = uv.getY(group.start + 1) - uv.getY(group.start)
+    const dv2 = uv.getY(group.start + 2) - uv.getY(group.start)
+    // Solve (a e1 + b e2) . e1 = dv1 and . e2 = dv2 for the in-plane gradient.
+    const d11 = e1.dot(e1)
+    const d12 = e1.dot(e2)
+    const d22 = e2.dot(e2)
+    const det = d11 * d22 - d12 * d12
+    const a = (dv1 * d22 - dv2 * d12) / det
+    const b = (dv2 * d11 - dv1 * d12) / det
+    return e1.multiplyScalar(a).addScaledVector(e2, b).normalize()
+  }
+
   // Whether the face the die has landed on can be made to show `value` just by trading numbers
   // within its group. True for most dice; a d5 that landed on a side can show 2, 3 or 4 but not 1 or 5.
   canShowOnTop(value: number): boolean {

@@ -59,6 +59,9 @@ export interface DieShape {
   // landing face shows the rolled number). Most dice keep their numbers fixed and are thrown until
   // they land right; this is for a die that cannot be steered to every face, like the d7.
   freeNumbers?: boolean
+  // For a still picture of the die (see previews.ts): the face to show pointing up, when it is not just
+  // the face whose label is the highest value, and how far to rotate the d4's corner numbers.
+  previewFace?: { label: number; offset?: number }
   // How a number is printed (the percentile die prints 10, 20 ... 90 and 00; the units die 0-9).
   labelText?: (value: number) => string
   // Draws a face's texture itself, for dice whose numbers depend on the other faces (the prisms). The
@@ -100,6 +103,8 @@ export const d4: DieShape = {
   mass: 300,
   textMargin: 1,
   readsBottom: true,
+  // Face 1 with the corner numbers turned by 2 has the 4 at the top corner.
+  previewFace: { label: 1, offset: 2 },
   cornerLabels: [
     [[], [2, 4, 3], [1, 3, 4], [2, 1, 4], [1, 2, 3]],
     [[], [2, 3, 4], [3, 1, 4], [2, 4, 1], [3, 2, 1]],
