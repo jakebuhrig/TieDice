@@ -164,29 +164,32 @@ function App() {
           onTogglePaused={toggleGradientPaused}
         />
       </header>
-      <DiceTray
-        tray={tray}
-        previews={dicePreviews}
-        onAdd={addDie}
-        onRemove={removeDie}
-        onClear={() => setTray([])}
-        modifier={modifier}
-        onModifierChange={setModifier}
-        showHiddenToggle={role === 'GM'}
-        hidden={hidden}
-        onHiddenChange={setHidden}
-      />
-      <LastRoll
-        roll={lastRolled ?? myLastRoll}
-        rolling={rolling}
-        canRoll={stagedCount > 0}
-        onRoll={roll}
-        onLanded={handleLanded}
-      />
-      <section className="history-section">
-        <h2>Roll History</h2>
-        <RollHistoryList rolls={visibleHistory} />
-      </section>
+      <div className="workspace">
+        <DiceTray
+          previews={dicePreviews}
+          onAdd={addDie}
+          modifier={modifier}
+          onModifierChange={setModifier}
+          showHiddenToggle={role === 'GM'}
+          hidden={hidden}
+          onHiddenChange={setHidden}
+        />
+        <div className="main-column">
+          <LastRoll
+            roll={lastRolled ?? myLastRoll}
+            rolling={rolling}
+            tray={tray}
+            onRemove={removeDie}
+            onClear={() => setTray([])}
+            onRoll={roll}
+            onLanded={handleLanded}
+          />
+          <section className="history-section">
+            <h2>Roll History</h2>
+            <RollHistoryList rolls={visibleHistory} />
+          </section>
+        </div>
+      </div>
     </main>
   )
 }

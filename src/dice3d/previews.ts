@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { SUPPORTED_DICE } from '../dice'
-import { ROLLABLES, SHAPES } from './catalog'
+import { DIE_COLORS, ROLLABLES, SHAPES } from './catalog'
 import { Die } from './Die'
 import { DIE_FONT_FAMILY, DIE_FONT_WEIGHT } from './shapes'
 
@@ -15,7 +15,7 @@ const SHARED_FRAMING = 0.3
 
 // One picture per die size (3, 4 ... 100), as PNG data URLs, `pixels` wide and tall, handed to
 // `onPreview` one at a time (with a pause between, so the page stays responsive while they are made).
-// The d100 shows its pair, the percentile die and the units die, side by side.
+// The d100 shows just its percentile die, the 00.
 export async function renderDicePreviews(pixels: number, onPreview: (size: number, url: string) => void) {
   // The numbers are drawn with the app's font, which must have loaded before the dice are made.
   await document.fonts.load(`${DIE_FONT_WEIGHT} 64px ${DIE_FONT_FAMILY}`)
@@ -37,18 +37,16 @@ export async function renderDicePreviews(pixels: number, onPreview: (size: numbe
   const biggest = Math.max(...Object.values(SHAPES).map((shape) => SIZE * shape.scale))
 
   for (const size of SUPPORTED_DICE) {
-    const shapes = ROLLABLES[`d${size}`].shapes
-    // The d100's two dice sit side by side, a little smaller so both fit.
-    const pair = shapes.length > 1
-    const dice = shapes.map((name) => new Die(SHAPES[name], material, { size: pair ? SIZE * 0.85 : SIZE }))
+    // The first die of a d100 is the percentile die (00); its units die is left out of the picture.
+    const shapes = ROLLABLES[`d${size}`].shapes.slice(0, 1)
+    const dice = shapes.map((name) => new Die(SHAPES[name], material, { size: SIZE, ...DIE_COLORS[`d${size}`] }))
     dice.forEach((die, i) => {
       die.poseForPreview(SHAPES[shapes[i]].sides)
-      die.mesh.position.set(pair ? (i === 0 ? -1 : 1) * die.radius * 1.05 : 0, 0, 0)
       scene.add(die.mesh)
     })
 
     const radius = Math.max(...dice.map((die) => die.radius))
-    const half = (pair ? radius * 2.1 : radius) * (1 - SHARED_FRAMING) * 1.12 + biggest * SHARED_FRAMING * 1.12
+    const half = radius * (1 - SHARED_FRAMING) * 1.12 + biggest * SHARED_FRAMING * 1.12
     const camera = new THREE.OrthographicCamera(-half, half, half, -half, 0.1, 100)
     // Straight down, with the numbers upright.
     camera.position.set(0, 20, 0)

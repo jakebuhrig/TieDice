@@ -43,6 +43,26 @@ const LOOK: Record<string, { scale: number; numberScale: number }> = {
 LOOK['d10 percentile'] = { ...LOOK.d10, numberScale: LOOK.d20.numberScale }
 LOOK['d10 units'] = LOOK['d10 percentile']
 
+// The colour of each kind of die and of its numbers, like an old-school set where every die in the
+// bag is a different colour. The d20 keeps the pale blue-white the dice started with. Dark numbers go
+// on light dice and white numbers on dark ones.
+export const DIE_COLORS: Record<string, { backColor: string; fontColor: string }> = {
+  d3: { backColor: '#e5484d', fontColor: '#ffffff' },
+  d4: { backColor: '#ff9f43', fontColor: '#2b1700' },
+  d5: { backColor: '#ffd84a', fontColor: '#2b2300' },
+  d6: { backColor: '#8ddf5c', fontColor: '#0f2a05' },
+  d7: { backColor: '#1fb5a3', fontColor: '#ffffff' },
+  d8: { backColor: '#58b4ff', fontColor: '#06233f' },
+  d10: { backColor: '#3d5bdb', fontColor: '#ffffff' },
+  d12: { backColor: '#8f5cf5', fontColor: '#ffffff' },
+  d14: { backColor: '#d946ef', fontColor: '#ffffff' },
+  d16: { backColor: '#ff7eb0', fontColor: '#3a0820' },
+  d20: { backColor: '#dcecf8', fontColor: '#12263a' },
+  d24: { backColor: '#ff6b4a', fontColor: '#ffffff' },
+  d30: { backColor: '#e0b73a', fontColor: '#2b2200' },
+  d100: { backColor: '#2dd4bf', fontColor: '#04302a' },
+}
+
 // Every shape the 3D roller can draw, by name.
 export const SHAPES: Record<string, DieShape> = Object.fromEntries(
   Object.entries(BASE_SHAPES).map(([name, shape]) => [

@@ -78,67 +78,84 @@ function EyeClosedIcon({ className }: { className: string }) {
   )
 }
 
+// The dice that are staged to roll, as pills (click one to take a die back out).
+export function StagedDice({ tray, onRemove }: Pick<DiceTrayProps, 'tray' | 'onRemove'>) {
+  return (
+    <div className="staged-dice" role="group" aria-label="Dice staged to roll">
+      {tray.map(({ size, count }) => (
+        <button
+          key={size}
+          type="button"
+          className="staged-die"
+          onClick={() => onRemove(size)}
+          aria-label={`${count}d${size} staged. Remove one d${size}`}
+          title="Click to remove one"
+        >
+          {count}d{size}
+          <img src={removeIcon} alt="" width={16} height={16} />
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// The left column: the dice to add (with the secret-roll switch pinned at the foot of their panel), then
+// the modifier, each as wide as the dice.
 export function DiceTray({
-  tray,
   previews,
   onAdd,
-  onRemove,
-  onClear,
   modifier,
   onModifierChange,
   showHiddenToggle,
   hidden,
   onHiddenChange,
-}: DiceTrayProps) {
+}: Pick<
+  DiceTrayProps,
+  'previews' | 'onAdd' | 'modifier' | 'onModifierChange' | 'showHiddenToggle' | 'hidden' | 'onHiddenChange'
+>) {
   return (
     <div className="dice-tray">
-      <div className="die-buttons">
-        {SUPPORTED_DICE.map((size) => (
-          <button
-            key={size}
-            type="button"
-            onClick={() => onAdd(size)}
-            aria-label={`Add a d${size} to the roll`}
-            title={`d${size}`}
-          >
-            {previews[size] ? (
-              <img className="die-preview" src={previews[size]} alt="" width={44} height={44} />
-            ) : (
-              <>d{size}</>
-            )}
-          </button>
-        ))}
-      </div>
+      <div className="die-panel">
+        <div className={showHiddenToggle ? 'die-buttons has-footer' : 'die-buttons'}>
+          {SUPPORTED_DICE.map((size) => (
+            <button
+              key={size}
+              type="button"
+              onClick={() => onAdd(size)}
+              aria-label={`Add a d${size} to the roll`}
+              title={`d${size}`}
+            >
+              {previews[size] ? (
+                <img className="die-preview" src={previews[size]} alt="" width={56} height={56} />
+              ) : (
+                <>d{size}</>
+              )}
+            </button>
+          ))}
+        </div>
 
-      <div className="staged-dice" role="group" aria-label="Dice staged to roll">
-        {tray.map(({ size, count }) => (
-          <button
-            key={size}
-            type="button"
-            className="staged-die"
-            onClick={() => onRemove(size)}
-            aria-label={`${count}d${size} staged. Remove one d${size}`}
-            title="Click to remove one"
-          >
-            {count}d{size}
-            <img src={removeIcon} alt="" width={16} height={16} />
-          </button>
-        ))}
-        {tray.length > 0 && (
-          <button
-            type="button"
-            className="clear-button"
-            onClick={onClear}
-            aria-label="Clear all staged dice"
-          >
-            Clear
-          </button>
+        {showHiddenToggle && (
+          // Always in view at the foot of the panel; the dice scroll away behind it, fading out.
+          <label className="die-footer" title="Secret roll">
+            {/* The icon sits in the track's empty end: open eye when off, closed eye when on. */}
+            <span className="switch-wrap">
+              <input
+                type="checkbox"
+                role="switch"
+                className="switch"
+                aria-label="Secret roll"
+                checked={hidden}
+                onChange={(e) => onHiddenChange(e.target.checked)}
+              />
+              <EyeIcon className="switch-icon switch-icon-off" />
+              <EyeClosedIcon className="switch-icon switch-icon-on" />
+            </span>
+          </label>
         )}
       </div>
 
-      <div className={showHiddenToggle ? 'tray-options' : 'tray-options is-solo'}>
-        <div className="modifier-card" role="group" aria-labelledby="modifier-label">
-          <span id="modifier-label">Modifier</span>
+      <div className="tray-options">
+        <div className="modifier-card" role="group" aria-label="Modifier">
           <div className="modifier-controls">
             <button
               type="button"
@@ -161,24 +178,6 @@ export function DiceTray({
             </button>
           </div>
         </div>
-
-        {showHiddenToggle && (
-          <label className="hidden-card">
-            <span>Secret roll</span>
-            {/* The icon sits in the track's empty side: open eye when off, closed eye when on. */}
-            <span className="switch-wrap">
-              <input
-                type="checkbox"
-                role="switch"
-                className="switch"
-                checked={hidden}
-                onChange={(e) => onHiddenChange(e.target.checked)}
-              />
-              <EyeIcon className="switch-icon switch-icon-off" />
-              <EyeClosedIcon className="switch-icon switch-icon-on" />
-            </span>
-          </label>
-        )}
       </div>
     </div>
   )

@@ -28,19 +28,22 @@
 /* Slim, translucent scrollbars that sit quietly on the gradient instead of the browser default. */
 @supports selector(::-webkit-scrollbar) {
   .app::-webkit-scrollbar,
-  .history-section::-webkit-scrollbar {
+  .history-section::-webkit-scrollbar,
+  .die-buttons::-webkit-scrollbar {
     width: 10px;
   }
 
   .app::-webkit-scrollbar-track,
-  .history-section::-webkit-scrollbar-track {
+  .history-section::-webkit-scrollbar-track,
+  .die-buttons::-webkit-scrollbar-track {
     background: transparent;
     /* Keeps the pill clear of the panel's rounded corners at both ends. */
     margin: 6px 0;
   }
 
   .app::-webkit-scrollbar-thumb,
-  .history-section::-webkit-scrollbar-thumb {
+  .history-section::-webkit-scrollbar-thumb,
+  .die-buttons::-webkit-scrollbar-thumb {
     /* The transparent border + padding-box clip insets the visible pill by 2px on every side. */
     border: 2px solid transparent;
     border-radius: 999px;
@@ -49,20 +52,23 @@
   }
 
   .app::-webkit-scrollbar-thumb:hover,
-  .history-section::-webkit-scrollbar-thumb:hover {
+  .history-section::-webkit-scrollbar-thumb:hover,
+  .die-buttons::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.65);
     background-clip: padding-box;
   }
 
   .app::-webkit-scrollbar-button,
-  .history-section::-webkit-scrollbar-button {
+  .history-section::-webkit-scrollbar-button,
+  .die-buttons::-webkit-scrollbar-button {
     display: none;
   }
 }
 
 @supports not selector(::-webkit-scrollbar) {
   .app,
-  .history-section {
+  .history-section,
+  .die-buttons {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
   }
@@ -81,10 +87,6 @@
 
 .app.is-calm .logo img {
   filter: invert(1);
-}
-
-.app.is-calm .clear-button {
-  color: #fff;
 }
 
 .gradient-bg {
@@ -201,29 +203,91 @@ input:focus-visible {
   font-size: 0.8rem;
 }
 
-.dice-tray {
+/* The panel is two columns: a narrow rail down the left (dice, modifier, secret roll), and the roll
+   area and history beside it. */
+.workspace {
   display: flex;
-  flex-direction: column;
+  flex: 1;
   gap: 8px;
+  min-height: 0;
 }
 
-/* All the dice live in one glass track; each button is just its picture, with a soft highlight on hover. */
-.die-buttons {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 2px;
-  padding: 6px;
+.main-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dice-tray {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+  width: 80px;
+}
+
+/* All the dice live in one glass panel that fills the rail's height. Inside, a single column of dice
+   scrolls; each button is just its picture, with a soft highlight on hover. */
+.die-panel {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   border-radius: 12px;
-  background: var(--surface-fill);
-  backdrop-filter: blur(8px);
+  /* The same 60% glass as the roll area and the history. */
+  background: var(--card-fill);
+  backdrop-filter: blur(10px);
   box-shadow: var(--glass-ring);
+}
+
+.die-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  /* The dice sit 12px in from each side, the same as the space under the secret-roll switch (the footer
+     is 56px high around a 32px switch). On the right the scrollbar takes 8px of that 12. */
+  padding: 10px 4px 10px 12px;
+}
+
+/* A slimmer scrollbar here keeps the dice close to the panel's edges. */
+@supports selector(::-webkit-scrollbar) {
+  .die-buttons::-webkit-scrollbar {
+    width: 8px;
+  }
+}
+
+/* With the secret-roll switch pinned over the bottom, the dice can scroll fully clear of it, and they
+   fade out as they slide behind it. */
+.die-buttons.has-footer {
+  padding-bottom: 66px;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 92px), transparent calc(100% - 44px));
+}
+
+/* The secret-roll switch, always anchored at the foot of the dice panel. */
+.die-footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  cursor: pointer;
 }
 
 .die-buttons button {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 48px;
+  flex: none;
+  height: 58px;
   min-width: 0;
   padding: 0;
   border: none;
@@ -239,15 +303,15 @@ input:focus-visible {
 /* The die's picture is its label; it sits in the button without growing it. */
 .die-preview {
   display: block;
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
   pointer-events: none;
 }
 
-/* Hover/press: a soft light patch behind the die. */
+/* Hover/press: a soft dark patch behind the die. */
 .die-buttons button:hover,
 .die-buttons button:active {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(10, 10, 15, 0.3);
 }
 
 .die-buttons button:focus-visible {
@@ -265,8 +329,8 @@ input:focus-visible {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 5.6px;
-  min-height: 32px;
+  justify-content: center;
+  gap: 6px;
 }
 
 .staged-die {
@@ -289,65 +353,53 @@ input:focus-visible {
   display: block;
 }
 
+/* A softly lit pill under the Roll button that takes every staged die back out. */
 .clear-button {
-  min-height: 32px;
-  padding: 4px 6.4px;
+  /* The same size as the Roll button above it. */
+  flex: none;
+  width: min(260px, 100%);
+  height: 40px;
+  padding: 0;
   border: none;
-  background: transparent;
-  color: #000;
-  font-size: 13.333px;
+  border-radius: 48px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
   font-weight: 600;
-  opacity: 0.7;
-  text-decoration: underline;
-  text-underline-offset: 2px;
   cursor: pointer;
+  transition:
+    background-color 100ms ease,
+    width 120ms ease,
+    height 120ms ease;
 }
 
-.clear-button:hover {
-  opacity: 1;
+/* Hover/press: lights up and grows by whole pixels, like the Roll button. */
+.clear-button:hover,
+.clear-button:active {
+  width: min(270px, 100%);
+  height: 42px;
+  background: rgba(255, 255, 255, 0.24);
 }
 
-/* Modifier on the left, "Secret roll" on the right; the modifier takes the full row for players. */
+/* The modifier and the secret-roll switch sit one above the other under the dice, each as wide as the
+   dice track. A player has no secret roll, so only the modifier shows. */
 .tray-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.tray-options.is-solo {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.hidden-card,
-.modifier-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: var(--card-fill);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--glass-ring);
-  font-size: 13.6px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.hidden-card {
-  cursor: pointer;
-}
-
-/* The round pill and switch read as further from the edge than the label does, so they sit a little closer. */
-.hidden-card,
+/* No card around the modifier: just its pill, as wide as the dice panel above it. */
 .modifier-card {
-  padding-right: 8px;
+  display: block;
 }
 
-/* One dark pill (the same fill as the switch's track) holding the number; the −/+ icons sit inside it. */
+/* One dark pill (the same fill as the switch's track) holding the number; the -/+ icons sit inside it. */
 .modifier-controls {
   position: relative;
-  flex-shrink: 0;
-  width: 92px;
-  height: 32px;
+  width: 100%;
+  height: 36px;
 }
 
 .modifier-value {
@@ -356,14 +408,14 @@ input:focus-visible {
   width: 100%;
   height: 100%;
   margin: 0;
-  /* Leaves room for the 32px icon buttons at each end. */
-  padding: 0 32px;
+  /* Leaves room for the icon buttons at each end. */
+  padding: 0 26px;
   border: none;
   border-radius: 999px;
   background: var(--switch-off);
   color: #fff;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0;
   text-align: center;
@@ -380,14 +432,15 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
-/* The −/+ buttons are icon-only and overlay the ends of the pill. */
+/* The -/+ buttons are icon-only and overlay the ends of the pill. */
 .modifier-button {
   position: absolute;
   top: 0;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
+  margin-top: 4px;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -398,11 +451,11 @@ input:focus-visible {
 }
 
 .modifier-button:first-child {
-  left: 0;
+  left: 4px;
 }
 
 .modifier-button:last-child {
-  right: 0;
+  right: 4px;
 }
 
 .modifier-button:hover:not(:disabled),
@@ -432,14 +485,14 @@ input:focus-visible {
 
 /* Off: the knob is on the left, so the open eye fills the right half. */
 .switch-icon-off {
-  /* 2px further in than centered: the rounded end of the track makes the space look shifted outward. */
-  right: 9px;
+  /* Further in than centered: the rounded end of the track makes the space look shifted outward. */
+  right: 11px;
   color: rgba(255, 255, 255, 0.75);
 }
 
 /* On: the knob is on the right, so the closed eye fills the left half (dark on the green track). */
 .switch-icon-on {
-  left: 9px;
+  left: 11px;
   color: rgba(10, 10, 15, 0.7);
   opacity: 0;
 }
@@ -498,7 +551,7 @@ input:focus-visible {
 .last-roll {
   position: relative;
   flex: none;
-  height: 208px;
+  height: 250px;
   border-radius: 12px;
   background: var(--card-fill);
   backdrop-filter: blur(10px);
@@ -522,10 +575,10 @@ input:focus-visible {
    clicks. Its shape is close to the floor the dice are thrown on. */
 .last-roll-dice {
   position: absolute;
-  inset: 0 0 34px;
+  inset: 0 0 48px;
   display: block;
   width: 100%;
-  height: calc(100% - 34px);
+  height: calc(100% - 48px);
   pointer-events: none;
 }
 
@@ -542,7 +595,9 @@ input:focus-visible {
 .last-roll-caption {
   position: absolute;
   right: 0;
-  bottom: 2px;
+  /* The digits sit as far from the bottom edge as the text does from the sides (the box has a few
+     pixels of space under the baseline, hence 12 rather than 16). */
+  bottom: 12px;
   left: 0;
   display: flex;
   align-items: baseline;
@@ -595,30 +650,53 @@ input:focus-visible {
   opacity: 0.65;
 }
 
-.last-roll .roll-button {
-  /* Centered with layout (not translate) so it never lands on a half pixel. */
+/* Over the (blurred) last result: the staged dice, the Roll button, then Clear, stacked in the middle. */
+.roll-overlay {
   position: absolute;
   inset: 0;
-  margin: auto;
-  width: min(347px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  overflow-y: auto;
+  /* A dark scrim over the blurred last result, so the pills and buttons stand out. */
+  background: rgba(8, 8, 14, 0.5);
+  transition: opacity 90ms ease;
+}
+
+/* Fades out quickly as the roll starts. */
+.roll-overlay.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The slot (round the Roll and Clear buttons) is as tall as a button at its biggest, so the hover growth
+   never moves anything. */
+.roll-slot {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+}
+
+.last-roll .roll-button {
+  width: min(260px, 100%);
   height: 40px;
-  border: 1px solid #b07bff;
+  border: none;
   border-radius: 48px;
   background: #fff;
   color: #1a1a1a;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition:
     width 120ms ease,
-    height 120ms ease,
-    opacity 90ms ease;
-}
-
-/* Fades out quickly as the roll starts. */
-.last-roll .roll-button.is-leaving {
-  opacity: 0;
-  pointer-events: none;
+    height 120ms ease;
 }
 
 /*
@@ -627,13 +705,15 @@ input:focus-visible {
  */
 .last-roll .roll-button:hover,
 .last-roll .roll-button:active {
-  width: calc(min(347px, calc(100% - 32px)) + 10px);
+  width: min(270px, 100%);
   height: 42px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .last-roll-content,
   .last-roll-caption,
+  .roll-overlay,
+  .clear-button,
   .last-roll .roll-button {
     transition: none;
   }

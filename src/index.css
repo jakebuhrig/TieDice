@@ -12,7 +12,7 @@ body {
 }
 
 body.is-mock #root {
-  width: 444px;
+  width: 524px;
   height: 666px;
   min-height: 0;
   /* Makes position: fixed children (the gradient) fill this frame, not the whole page. */

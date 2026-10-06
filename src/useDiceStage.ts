@@ -18,7 +18,7 @@ class StageSession {
     this.loading ??= import('./dice3d/DiceStage')
       .then(({ DiceStage }) => {
         if (!canvas || this.generation !== mine) return null
-        this.stage = new DiceStage(canvas, { fov: 16, cameraScale: 2, speed: 1.5 })
+        this.stage = new DiceStage(canvas, { fitToCanvas: true, fov: 16, zoomOut: 1.5, speed: 1.5 })
         return this.stage
       })
       .catch(() => null)

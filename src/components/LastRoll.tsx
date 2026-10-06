@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { formatRoll, type RollRecord } from '../dice'
+import { formatRoll, type RollRecord, type Tray } from '../dice'
 import { useDiceStage } from '../useDiceStage'
+import { StagedDice } from './DiceTray'
 
 interface LastRollProps {
   roll: RollRecord | undefined
   rolling: RollRecord | null
-  canRoll: boolean
+  // The dice staged to roll, shown over the card with the Roll and Clear buttons.
+  tray: Tray
+  onRemove: (size: Tray[number]['size']) => void
+  onClear: () => void
   onRoll: () => void
   onLanded: (record: RollRecord) => void
 }
@@ -19,7 +23,12 @@ type Phase = 'idle' | 'leaving' | 'throwing'
 // The last-roll card: the dice tumble across it, and come to rest showing what was rolled. The total
 // sits quietly underneath for ease of use. When dice are staged, the previous result blurs back and
 // the Roll button takes its place in the card.
-export function LastRoll({ roll, rolling, canRoll, onRoll, onLanded }: LastRollProps) {
+export function LastRoll({ roll, rolling, tray, onRemove, onClear, onRoll, onLanded }: LastRollProps) {
+  const canRoll = tray.length > 0
+  // The dice the overlay shows. A roll empties the tray at once, but the overlay takes a moment to
+  // fade, so it keeps showing the dice that were rolled until it has gone.
+  const [lastStaged, setLastStaged] = useState(tray)
+  if (canRoll && tray !== lastStaged) setLastStaged(tray)
   const { canvasRef, prepare, throwDice } = useDiceStage()
   // Which roll the throw has started for. Until then a roll in progress counts as "leaving".
   const [throwingId, setThrowingId] = useState<string | null>(null)
@@ -113,14 +122,22 @@ export function LastRoll({ roll, rolling, canRoll, onRoll, onLanded }: LastRollP
         {announcement}
       </div>
       {showPill && (
-        <button
-          type="button"
-          className={phase === 'leaving' ? 'roll-button is-leaving' : 'roll-button'}
-          onClick={onRoll}
-          tabIndex={phase === 'leaving' ? -1 : undefined}
+        <div
+          className={phase === 'leaving' ? 'roll-overlay is-leaving' : 'roll-overlay'}
+          inert={phase === 'leaving'}
         >
-          Roll the dice
-        </button>
+          <StagedDice tray={phase === 'leaving' ? lastStaged : tray} onRemove={onRemove} />
+          <div className="roll-slot">
+            <button type="button" className="roll-button" onClick={onRoll}>
+              Roll the dice
+            </button>
+          </div>
+          <div className="roll-slot">
+            <button type="button" className="clear-button" onClick={onClear} aria-label="Clear all staged dice">
+              Clear
+            </button>
+          </div>
+        </div>
       )}
     </section>
   )

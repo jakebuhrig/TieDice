@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { Die, type DieOptions } from './Die'
 import { DiceWorld, STEP, type Cell, type Throw } from './DiceWorld'
-import { ROLLABLES, SHAPES, type Rollable } from './catalog'
+import { DIE_COLORS, ROLLABLES, SHAPES, type Rollable } from './catalog'
 
 // A canvas that renders rolling dice over whatever is behind it (the floor only draws shadows).
 
@@ -12,12 +12,16 @@ const MAX_DIE_SIZE = 3.8
 const MIN_DIE_SIZE = 0.7
 
 export interface StageOptions {
-  // Moves the camera in (below 1) or out (above 1), to frame the floor in a canvas of any shape.
-  cameraScale?: number
+  // Makes the floor the same shape as the canvas (as wide as it is deep, scaled by the canvas's
+  // proportions) so the dice use all of it. Without it the floor is a fixed wide rectangle.
+  fitToCanvas?: boolean
   // The camera's vertical field of view in degrees (38 if left out). A narrow view from far away
   // flattens the perspective, so dice at the back of the floor are not much smaller than those at the
-  // front; move the camera out with cameraScale to keep the floor in frame.
+  // front; the camera moves back as far as it needs to keep the whole floor in frame.
   fov?: number
+  // Pulls the camera back by this factor beyond what just fits the floor (1.25 shows 25% more around
+  // it), so everything looks smaller and the dice have visible room to tumble.
+  zoomOut?: number
   // How fast a throw plays back, as a multiple of real time. The physics itself always steps at a
   // fixed 1/60s, so this only changes how quickly the steps are played.
   speed?: number
@@ -30,7 +34,9 @@ export interface RollOptions {
 }
 
 export class DiceStage {
-  readonly world = new DiceWorld({ halfWidth: HALF_WIDTH, halfDepth: HALF_DEPTH })
+  readonly world: DiceWorld
+  private readonly halfWidth: number
+  private readonly halfDepth = HALF_DEPTH
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
   private readonly camera: THREE.PerspectiveCamera
@@ -42,6 +48,7 @@ export class DiceStage {
   private disposed = false
   private readonly canvas: HTMLCanvasElement
   private readonly speed: number
+  private readonly zoomOut: number
   // The canvas is only redrawn while a throw plays or until this time (ms), so a stage with dice at
   // rest costs nothing.
   private renderUntil = 0
@@ -49,6 +56,10 @@ export class DiceStage {
   constructor(canvas: HTMLCanvasElement, options: StageOptions = {}) {
     this.canvas = canvas
     this.speed = options.speed ?? 1
+    this.zoomOut = options.zoomOut ?? 1
+    const aspect = (canvas.clientWidth || 1) / (canvas.clientHeight || 1)
+    this.halfWidth = options.fitToCanvas ? Math.min(HALF_WIDTH, Math.max(5, HALF_DEPTH * aspect)) : HALF_WIDTH
+    this.world = new DiceWorld({ halfWidth: this.halfWidth, halfDepth: this.halfDepth })
     this.camera = new THREE.PerspectiveCamera(options.fov ?? 38, 1, 0.1, 500)
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
     this.renderer.setClearColor(0x000000, 0)
@@ -61,17 +72,17 @@ export class DiceStage {
     sun.position.set(-8, 30, 12)
     sun.castShadow = true
     sun.shadow.mapSize.set(1024, 1024)
-    sun.shadow.camera.left = -HALF_WIDTH - 4
-    sun.shadow.camera.right = HALF_WIDTH + 4
-    sun.shadow.camera.top = HALF_DEPTH + 6
-    sun.shadow.camera.bottom = -HALF_DEPTH - 6
+    sun.shadow.camera.left = -this.halfWidth - 4
+    sun.shadow.camera.right = this.halfWidth + 4
+    sun.shadow.camera.top = this.halfDepth + 6
+    sun.shadow.camera.bottom = -this.halfDepth - 6
     sun.shadow.camera.near = 5
     sun.shadow.camera.far = 80
     this.scene.add(sun)
 
     // The floor draws nothing but the dice's shadows, so the panel's gradient shows through.
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(HALF_WIDTH * 2 + 10, HALF_DEPTH * 2 + 10),
+      new THREE.PlaneGeometry(this.halfWidth * 2 + 10, this.halfDepth * 2 + 10),
       new THREE.ShadowMaterial({ opacity: 0.28 }),
     )
     floor.rotation.x = -Math.PI / 2
@@ -79,9 +90,7 @@ export class DiceStage {
     this.scene.add(floor)
 
     // Straight down on the floor, with the far edge at the top of the picture.
-    this.camera.position.set(0, 28, 0).multiplyScalar(options.cameraScale ?? 1)
     this.camera.up.set(0, 0, -1)
-    this.camera.lookAt(0, 0, 0)
 
     this.resize()
     // The numbers are drawn once the font has loaded; draw again then.
@@ -98,6 +107,12 @@ export class DiceStage {
     this.renderer.setSize(width, height, false)
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
+    // Far enough up that the whole floor, with a little margin, is in view.
+    const reach = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)
+    const height3d = (this.halfDepth * 1.06) / reach
+    const width3d = (this.halfWidth * 1.06) / (reach * this.camera.aspect)
+    this.camera.position.set(0, Math.max(height3d, width3d) * this.zoomOut, 0)
+    this.camera.lookAt(0, 0, 0)
     this.invalidate()
   }
 
@@ -133,7 +148,7 @@ export class DiceStage {
     const room = Math.min(...cells.map((cell) => Math.min(cell.x1 - cell.x0, cell.z1 - cell.z0)))
     const biggest = Math.max(...shapes.map((shape) => SHAPES[shape].scale))
     const size = Math.min(MAX_DIE_SIZE, Math.max(MIN_DIE_SIZE, (room * 0.48) / biggest))
-    names.forEach((name) => this.addRoll(name, { size }))
+    names.forEach((name) => this.addRoll(name, { size, ...DIE_COLORS[name] }))
     return this.roll(
       dice.map((die) => die.value),
       options,
